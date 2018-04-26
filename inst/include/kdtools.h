@@ -1,4 +1,8 @@
 // Copyright Timothy H. Keitt 2018
+// Please see the LICENSE file in the R package
+// By using this header, you agree to cite this
+// work in your product using the DOI found at
+// https://doi.org/10.5281/zenodo.1213797
 
 #ifndef __KDTOOLS_H__
 #define __KDTOOLS_H__
@@ -335,12 +339,12 @@ Iter kd_lower_bound(Iter first, Iter last, const TupleType& value)
     if (all_less(*pivot, value))
       return kd_lower_bound<J>(next(pivot), last, value);
     auto it = kd_lower_bound<J>(first, pivot, value);
-    if (it == last || none_less(*it, value)) return it;
+    if (it != last && none_less(*it, value)) return it;
     it = kd_lower_bound<J>(next(pivot), last, value);
-    if (it == last || none_less(*it, value)) return it;
+    if (it != last && none_less(*it, value)) return it;
     return last;
   }
-  return none_less(*first, value) ? first : last;
+  return first != last && none_less(*first, value) ? first : last;
 }
 
 template <size_t I, typename Iter, typename TupleType>
@@ -355,12 +359,12 @@ Iter kd_upper_bound(Iter first, Iter last, const TupleType& value)
     if (none_less(value, *pivot))
       return kd_upper_bound<J>(next(pivot), last, value);
     auto it = kd_upper_bound<J>(first, pivot, value);
-    if (it == last || all_less(value, *it)) return it;
+    if (it != last && all_less(value, *it)) return it;
     it = kd_upper_bound<J>(next(pivot), last, value);
-    if (it == last || all_less(value, *it)) return it;
+    if (it != last && all_less(value, *it)) return it;
     return last;
   }
-  return all_less(value, *first) ? first : last;
+  return first != last && all_less(value, *first) ? first : last;
 }
 
 template <size_t I>

@@ -1,7 +1,7 @@
-99ac50fcc4a99955c5c59eacb85b0153 *DESCRIPTION
+1fd7ee80dcb3594cadeaf0c3fbcbb68a *DESCRIPTION
 274a0ca43245eb7808c659fd44070ca1 *LICENSE
 2905b322361acfd253e57b5256601c37 *NAMESPACE
-d354f0da05d122e833b9f5cb71bbd2ef *NEWS.md
+7821285eb0b221043afa508c8da61ab0 *NEWS.md
 837dba02ea0116d81667eeed443c55fb *R/RcppExports.R
 f328f969ee7ad75abfd1fee3276283d7 *R/arrayvec.R
 b4fe12876c37f8a22cde06e9701eecf0 *R/kdtools-package.R
@@ -10,14 +10,14 @@ b4fe12876c37f8a22cde06e9701eecf0 *R/kdtools-package.R
 f005913c1a57ad3a99c968f8e94bc853 *build/vignette.rds
 900f92ee693b6ea44e70ad969cbecc48 *inst/doc/kdtools.R
 d8432c2885c1f093d2a20b590c3f1f3f *inst/doc/kdtools.Rmd
-75adb1b60add9f16309cbddef0cb7732 *inst/doc/kdtools.html
+6bd79fd70edca207627dfd306ec3c279 *inst/doc/kdtools.html
 24b2866845e4d7050ebdb939a447b6b3 *inst/doc/methods.R
 1623bd0cc0a605cbfecb0a1b63b4798a *inst/doc/methods.Rmd
-1ec0367a5cb0a4688a4b7402791923bf *inst/doc/methods.html
+08d159ed64e35533facc8945b270cd35 *inst/doc/methods.html
 0de231a3271013d71c4d1a81781a7d48 *inst/extdata/nn_benchmark_data
 f7fc3a71a962dc83ef1b9beaf97b66ca *inst/extdata/query_benchmark_data
 e7d5bd35e1af9a36313455d5173ba52f *inst/extdata/sort_benchmark_data
-9a4e14dea5ecb3f5e2296b122b37f4ec *inst/include/kdtools.h
+706289e73bfb772bd401d1a5e0c15c2b *inst/include/kdtools.h
 28c1071230f76b71094066cf4e98ebe4 *man/arrayvec.Rd
 df2db91eaaee55e332aedcbac60672c2 *man/convert.Rd
 adeebeccd32ab470ca8f9955ba1f836c *man/figures/README-pressure-1.png
