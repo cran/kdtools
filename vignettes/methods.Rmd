@@ -49,7 +49,7 @@ kd_binary_search     | binary_search | returns true if key exists in range
 kd_equal_range        | equal_range | returns an iterator pair spanning all occurrences of a key
 kd_range_query       |  lower_bound, upper_bound     | finds all elements not less than lower and less than upper
 kd_nearest_neighbor   |           | finds nearest neighbor of key
-kd_nearest_neighbors  |            | finds k-nearest neighbors of key
+kd_nearest_neighbors, kd_nn_indices  |            | finds k-nearest neighbors of key
 lex_sort         |              | ordinary STL sort using kd_less for comparison
 
 
@@ -192,23 +192,25 @@ To ensure the correct behavior in the presence of multiple ties, or even when al
 template <size_t I, size_t K = 0>
 struct kd_less
 {
-  template <typename TupleType>
-  typename enable_if<is_not_last<K, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_not_last<K, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    constexpr auto J = next_dim<I, TupleType>::value;
-    return get<I>(lhs) == get<I>(rhs) ?
+    constexpr auto J = next_dim<I, T>::value;
+    return equal_nth<I>()(lhs, rhs) ?
       kd_less<J, K + 1>()(lhs, rhs) :
-        get<I>(lhs) < get<I>(rhs);
+        less_nth<I>()(lhs, rhs);
   }
-  template <typename TupleType>
-  typename enable_if<is_last<K, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_last<K, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    return get<I>(lhs) < get<I>(rhs);
+    return less_nth<I>()(lhs, rhs);
   }
 };
 ```
+
+The predicates ```equal_nth``` and ```less_nth``` compare the $I^{th}$ element of the tuple. They have specializations for handling pointers to tuple-like object, so all functions can operate on a range over pointers to tuples, allowing arbitrary indexing into the original data.
 
 A more general function object template ```kd_compare``` that takes an arbitrary binary predicate is also provided by ```kdtools```. Some examples applying ```kd_less```, including degenerate, all-ties cases, are shown here.
 
@@ -319,9 +321,9 @@ using range_type = std::vector<key_type>;
 
 BOOST_GEOMETRY_REGISTER_POINT_2D(key_type, double,
                                  boost::geometry::cs::cartesian,
-                                 first, second);
+                                 first, second)
   
-BOOST_GEOMETRY_REGISTER_BOX(box_type, key_type, first, second);
+BOOST_GEOMETRY_REGISTER_BOX(box_type, key_type, first, second)
   
 template <typename T, typename U>
 double time_it(T x, U u, size_t n)
@@ -674,7 +676,7 @@ As before, the results show kdtools to be as fast or faster than Boost Geometry 
 
 ### Mixed-type searches
 
-Notice that the only requirement of the algorithms is that the ```get<I>``` function return a type meeting the [EqualityComparable](http://en.cppreference.com/w/cpp/concept/EqualityComparable) and [LessThanComparable](http://en.cppreference.com/w/cpp/concept/LessThanComparable) C++ concepts. This means that different dimensions can contain different data types, including strings, for example. The current implementation uses ```std::get``` and so is restricted to ```std::pair```, ```std::tuple``` and ```std::array```, unless one chooses to specializes in the ```std``` namespace, which is generally not recommended. A suitable mechanism for providing type-specific specializations is to-be-implemented. The following example demonstrates sorting and searching a container holding keys of type ```std::tuple<double, std::string>```.
+Notice that the only requirement of the algorithms is that the ```get<I>``` function return a type meeting the [EqualityComparable](https://en.cppreference.com/w/cpp/named_req/EqualityComparable) and [LessThanComparable](https://en.cppreference.com/w/cpp/named_req/LessThanComparable) C++ concepts. This means that different dimensions can contain different data types, including strings, for example. The current implementation uses ```std::get``` and so is restricted to ```std::pair```, ```std::tuple``` and ```std::array```, unless one chooses to specializes in the ```std``` namespace, which is generally not recommended. A suitable mechanism for providing type-specific specializations is to-be-implemented. The following example demonstrates sorting and searching a container holding keys of type ```std::tuple<double, std::string>```.
 
 ```{r include=FALSE}
 header_code = '
@@ -706,20 +708,38 @@ using kdtools::kd_nearest_neighbors;
 
 using key_type = tuple<double, string>;
 using range_type = vector<key_type>;
+using pointers_type = vector<key_type*>;
+
+#define N 3
 
 void print_range(const range_type& x)
 {
-  auto n = x.size();
-  if (n < 10) stop("Not enough rows");
-  for (int i = 0; i != 5; ++i)
+  int n = x.size();
+  if (n < 2 * N) stop("Not enough rows");
+  for (int i = 0; i != N; ++i)
     Rcout << i << " "
           << std::get<0>(x[i]) << " " 
           << std::get<1>(x[i]) << std::endl;
   Rcout << "..." << std::endl;
-  for (int i = n - 5; i != n; ++i)
+  for (int i = n - N; i != n; ++i)
     Rcout << i << " "
           << std::get<0>(x[i]) << " " 
           << std::get<1>(x[i]) << std::endl;
+}
+
+void print_range(const pointers_type& x)
+{
+  int n = x.size();
+  if (n < 2 * N) stop("Not enough rows");
+  for (int i = 0; i != N; ++i)
+    Rcout << i << " "
+          << std::get<0>(*x[i]) << " " 
+          << std::get<1>(*x[i]) << std::endl;
+  Rcout << "..." << std::endl;
+  for (int i = n - N; i != n; ++i)
+    Rcout << i << " "
+          << std::get<0>(*x[i]) << " " 
+          << std::get<1>(*x[i]) << std::endl;
 }
 
 template <typename T>
@@ -736,6 +756,18 @@ struct make_key
   key_type operator()(const double a, const char* b){ return key_type(a, b); }
 };
 
+struct greater_key
+{
+  bool operator()(const double& lhs, const double& rhs)
+  {
+    return lhs > rhs;
+  }
+  bool operator()(const string& lhs, const string& rhs)
+  {
+    return lhs > rhs;
+  }
+};
+  
 template<class InputIt1, class InputIt2>
 double set_similarity(InputIt1 first1, InputIt1 last1,
                       InputIt2 first2, InputIt2 last2)
@@ -767,7 +799,7 @@ double scalar_diff(const std::string& lhs, const std::string& rhs)
                             begin(b), end(b));
 }
 
-}; // namespace kdtools
+} // namespace kdtools
 '
 
 header_file = "mixed_query.h"
@@ -800,7 +832,7 @@ void mixed_query(NumericVector c1, CharacterVector c2)
   });
   Rcout << "\nSort time: " << t.count() << " seconds" << std::endl;
   
-  Rcout << "\nFirst and last 5 elements of sorted data:\n" << std::endl;
+  Rcout << "\nFirst and last " << N << " elements of sorted data:\n" << std::endl;
   print_range(data);
   
   range_type result;
@@ -815,7 +847,7 @@ void mixed_query(NumericVector c1, CharacterVector c2)
   
   Rcout << "\nQuery time: " << u.count() << " seconds" << std::endl;
 
-  Rcout << "\nFirst and last 5 elements of query return:\n" << std::endl;
+  Rcout << "\nFirst and last " << N << " elements of query return:\n" << std::endl;
   kd_sort(begin(result), end(result)); print_range(result);
   
   result.clear();
@@ -830,7 +862,7 @@ void mixed_query(NumericVector c1, CharacterVector c2)
   
   Rcout << "\nNeighbors query time: " << v.count() << " seconds" << std::endl;
 
-  Rcout << "\nFirst and last 5 elements of neighbors query return:\n" << std::endl;
+  Rcout << "\nFirst and last " << N << " elements of neighbors query return:\n" << std::endl;
   print_range(result);
 }
 ```
@@ -839,9 +871,9 @@ First the data are sorted and then a range query is conducted. The range query s
 
 ```{r}
 data("parts_of_speech")
-numbers = runif(nrow(parts_of_speech))
+numbers = signif(runif(nrow(parts_of_speech)), 4)
 strings = sample(tolower(parts_of_speech[[1]]))
-mixed_query(signif(numbers, 4), strings)
+mixed_query(numbers, strings)
 ```
 
 The timing results indicate that sorting $2 \times 10 ^ 5$ tuples is on the order of 1/10th second, whereas the range query returned in less than a millisecond.
@@ -880,10 +912,59 @@ double scalar_diff(const std::string& lhs, const std::string& rhs)
                             begin(b), end(b));
 }
 
-}; // namespace kdtools
+} // namespace kdtools
 ```
 
 The ```set_similarity``` template is adapted from the STL ```set_intersection``` template and produces a number between 0 and 1. I have not attempted to prove this distance is metric, so the results may not be entirely correct. Also, there is no facility currently available to weight distances in different dimensions or override the default root-sum-of-squares algorithm for the multivariate distance.
+
+<!--
+
+### Indexing with pointer arrays
+
+Since version 0.4.0, ```kd_tools``` all predicates and distance functions have specializations or overloads to handle pointers to tuple-like objects. Hence, any of the routines can sort or search a vector of pointers to tuples, which act as indices into the original data.
+
+```{Rcpp}
+// [[Rcpp::depends(kdtools)]]
+// [[Rcpp::plugins(cpp11)]]
+
+#include "mixed_query.h"
+
+// [[Rcpp::export]]
+void sort_pointers(NumericVector c1, CharacterVector c2)
+{
+  auto n = c1.size();
+  
+  range_type data;
+  data.reserve(n);
+  
+  transform(begin(c1), end(c1), begin(c2), back_inserter(data), make_key());
+  
+  pointers_type idx1, idx2;
+  idx1.reserve(n); idx2.reserve(n);
+  
+  for (auto& x : data) {
+    idx1.push_back(&x);
+    idx2.push_back(&x);
+  }
+  
+  kd_sort(begin(idx1), end(idx1));
+  kd_sort(begin(idx2), end(idx2), greater_key());
+
+  Rcout << "Original order\n\n"; print_range(data);
+  Rcout << "\nOrder by less\n\n"; print_range(idx1);
+  Rcout << "\nOrder by greater\n\n"; print_range(idx2);
+}
+```
+
+Here, ```greater_key``` has overloads for both string and double types.
+
+```{r}
+#sort_pointers(numbers, strings)
+```
+
+Note that the forward and reverse sorting do not give exactly the same result (in reverse) owing to ties.
+
+-->
 
 ## Conclusions
 

@@ -194,20 +194,38 @@ using kdtools::kd_nearest_neighbors;
 
 using key_type = tuple<double, string>;
 using range_type = vector<key_type>;
+using pointers_type = vector<key_type*>;
+
+#define N 3
 
 void print_range(const range_type& x)
 {
-  auto n = x.size();
-  if (n < 10) stop("Not enough rows");
-  for (int i = 0; i != 5; ++i)
+  int n = x.size();
+  if (n < 2 * N) stop("Not enough rows");
+  for (int i = 0; i != N; ++i)
     Rcout << i << " "
           << std::get<0>(x[i]) << " " 
           << std::get<1>(x[i]) << std::endl;
   Rcout << "..." << std::endl;
-  for (int i = n - 5; i != n; ++i)
+  for (int i = n - N; i != n; ++i)
     Rcout << i << " "
           << std::get<0>(x[i]) << " " 
           << std::get<1>(x[i]) << std::endl;
+}
+
+void print_range(const pointers_type& x)
+{
+  int n = x.size();
+  if (n < 2 * N) stop("Not enough rows");
+  for (int i = 0; i != N; ++i)
+    Rcout << i << " "
+          << std::get<0>(*x[i]) << " " 
+          << std::get<1>(*x[i]) << std::endl;
+  Rcout << "..." << std::endl;
+  for (int i = n - N; i != n; ++i)
+    Rcout << i << " "
+          << std::get<0>(*x[i]) << " " 
+          << std::get<1>(*x[i]) << std::endl;
 }
 
 template <typename T>
@@ -224,6 +242,18 @@ struct make_key
   key_type operator()(const double a, const char* b){ return key_type(a, b); }
 };
 
+struct greater_key
+{
+  bool operator()(const double& lhs, const double& rhs)
+  {
+    return lhs > rhs;
+  }
+  bool operator()(const string& lhs, const string& rhs)
+  {
+    return lhs > rhs;
+  }
+};
+  
 template<class InputIt1, class InputIt2>
 double set_similarity(InputIt1 first1, InputIt1 last1,
                       InputIt2 first2, InputIt2 last2)
@@ -255,7 +285,7 @@ double scalar_diff(const std::string& lhs, const std::string& rhs)
                             begin(b), end(b));
 }
 
-}; // namespace kdtools
+} // namespace kdtools
 '
 
 header_file = "mixed_query.h"
@@ -266,7 +296,10 @@ Sys.setenv(PKG_CPPFLAGS = pkg_cppflags)
 
 ## ------------------------------------------------------------------------
 data("parts_of_speech")
-numbers = runif(nrow(parts_of_speech))
+numbers = signif(runif(nrow(parts_of_speech)), 4)
 strings = sample(tolower(parts_of_speech[[1]]))
-mixed_query(signif(numbers, 4), strings)
+mixed_query(numbers, strings)
+
+## ------------------------------------------------------------------------
+#sort_pointers(numbers, strings)
 

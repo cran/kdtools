@@ -24,7 +24,8 @@ namespace kdtools {
 template <typename T>
 struct ndim
 {
-  static constexpr auto value = std::tuple_size<T>::value;
+  using U = typename std::remove_pointer<T>::type;
+  static constexpr auto value = std::tuple_size<U>::value;
 };
 
 // Specialize for non-numeric types
@@ -51,17 +52,26 @@ using std::pair;
 using std::size_t;
 using std::thread;
 using std::vector;
+using std::is_same;
 using std::distance;
 using std::enable_if;
 using std::partition;
+using std::is_pointer;
 using std::nth_element;
 using std::tuple_element;
 using std::numeric_limits;
 using std::priority_queue;
 using std::is_partitioned;
+using std::remove_pointer;
 using std::iterator_traits;
 using std::partition_point;
 using std::placeholders::_1;
+
+template <typename T>
+struct is_not_pointer
+{
+  static constexpr bool value = !is_pointer<T>::value;
+};
 
 template <typename T>
 T middle_of(const T first, const T last)
@@ -72,23 +82,88 @@ T middle_of(const T first, const T last)
 template <size_t I>
 struct less_nth
 {
-  template <typename TupleType>
-  bool operator()(const TupleType& lhs, const TupleType& rhs)
+  template <typename T>
+  typename enable_if<is_not_pointer<T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
   {
     return get<I>(lhs) < get<I>(rhs);
   }
+  template <typename T>
+  typename enable_if<is_pointer<T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
+  {
+    return get<I>(*lhs) < get<I>(*rhs);
+  }
 };
 
-template <size_t I, typename TupleType>
-double dist_nth(const TupleType& lhs, const TupleType& rhs)
+template <size_t I>
+struct equal_nth
+{
+  template <typename T>
+  typename enable_if<is_not_pointer<T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
+  {
+    return get<I>(lhs) == get<I>(rhs);
+  }
+  template <typename T>
+  typename enable_if<is_pointer<T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
+  {
+    return get<I>(*lhs) == get<I>(*rhs);
+  }
+};
+
+template <typename Pred, size_t I>
+struct pred_nth
+{
+  Pred m_pred;
+  pred_nth(const Pred& pred) : m_pred(pred) {}
+  template <typename T>
+  typename enable_if<is_not_pointer<T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
+  {
+    return m_pred(get<I>(lhs), get<I>(rhs));
+  }
+  template <typename T>
+  typename enable_if<is_pointer<T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
+  {
+    return m_pred(get<I>(*lhs), get<I>(*rhs));
+  }
+};
+
+template <size_t I, typename Pred>
+pred_nth<Pred, I> make_pred_nth(const Pred& pred)
+{
+  return pred_nth<Pred, I>(pred);
+}
+
+template <size_t I, typename T>
+typename enable_if<is_not_pointer<T>::value, double>::type
+dist_nth(const T& lhs, const T& rhs)
 {
   return scalar_dist(get<I>(lhs), get<I>(rhs));
 }
 
-template <size_t I, typename TupleType>
-double diff_nth(const TupleType& lhs, const TupleType& rhs)
+template <size_t I, typename T>
+typename enable_if<is_pointer<T>::value, double>::type
+dist_nth(const T& lhs, const T& rhs)
+{
+  return scalar_dist(get<I>(*lhs), get<I>(*rhs));
+}
+
+template <size_t I, typename T>
+typename enable_if<is_not_pointer<T>::value, double>::type
+diff_nth(const T& lhs, const T& rhs)
 {
   return scalar_diff(get<I>(lhs), get<I>(rhs));
+}
+
+template <size_t I, typename T>
+typename enable_if<is_pointer<T>::value, double>::type
+diff_nth(const T& lhs, const T& rhs)
+{
+  return scalar_diff(get<I>(*lhs), get<I>(*rhs));
 }
 
 template <size_t I, size_t N>
@@ -118,20 +193,20 @@ struct is_last
 template <size_t I, size_t K = 0>
 struct kd_less
 {
-  template <typename TupleType>
-  typename enable_if<is_not_last<K, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_not_last<K, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    constexpr auto J = next_dim<I, TupleType>::value;
-    return get<I>(lhs) == get<I>(rhs) ?
+    constexpr auto J = next_dim<I, T>::value;
+    return equal_nth<I>()(lhs, rhs) ?
       kd_less<J, K + 1>()(lhs, rhs) :
-        get<I>(lhs) < get<I>(rhs);
+        less_nth<I>()(lhs, rhs);
   }
-  template <typename TupleType>
-  typename enable_if<is_last<K, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_last<K, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    return get<I>(lhs) < get<I>(rhs);
+    return less_nth<I>()(lhs, rhs);
   }
 };
 
@@ -140,26 +215,25 @@ struct kd_compare
 {
   Pred m_pred;
   kd_compare(const Pred& pred) : m_pred(pred) {}
-  template <typename TupleType>
-  typename enable_if<is_not_last<K, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_not_last<K, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    constexpr auto J = next_dim<I, TupleType>::value;
-    return !m_pred(get<I>(lhs), get<I>(rhs)) &&
-      !m_pred(get<I>(rhs), get<I>(lhs)) ?
-      kd_compare<Pred, J, K + 1>(m_pred)(lhs, rhs) :
-      m_pred(get<I>(lhs), get<I>(rhs));
+    auto pred = make_pred_nth<I>(m_pred);
+    constexpr auto J = next_dim<I, T>::value;
+    return !pred(lhs, rhs) && !pred(lhs, rhs) ?
+      kd_compare<Pred, J, K + 1>(m_pred)(lhs, rhs) : pred(lhs, rhs);
   }
-  template <typename TupleType>
-  typename enable_if<is_last<K, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_last<K, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    return m_pred(get<I>(lhs), get<I>(rhs));
+    return make_pred_nth<I>(m_pred)(lhs, rhs);
   }
 };
 
-template <size_t I, typename Pred, typename T>
-T make_kd_compare(const Pred& pred)
+template <size_t I, typename Pred>
+kd_compare<Pred, I> make_kd_compare(const Pred& pred)
 {
   return kd_compare<Pred, I>(pred);
 }
@@ -281,20 +355,48 @@ void kd_sort_threaded(Iter first, Iter last,
   }
 }
 
+template <size_t I, typename Iter, typename Compare>
+void kd_sort_threaded(Iter first, Iter last, const Compare& comp,
+                      int max_threads = std::thread::hardware_concurrency(),
+                      int thread_depth = 1)
+{
+  using TupleType = iter_value_t<Iter>;
+  constexpr auto J = next_dim<I, TupleType>::value;
+  if (distance(first, last) > 1)
+  {
+    auto pivot = middle_of(first, last);
+    auto pred = make_kd_compare<I>(comp);
+    nth_element(first, pivot, last, pred);
+    pivot = adjust_pivot(first, pivot, pred);
+    if ((1 << thread_depth) <= max_threads)
+    {
+      thread t(kd_sort_threaded<J, Iter>,
+               next(pivot), last, comp, max_threads, thread_depth + 1);
+      kd_sort_threaded<J>(first, pivot, comp, max_threads, thread_depth + 1);
+      t.join();
+    }
+    else
+    {
+      kd_sort<J>(next(pivot), last, comp);
+      kd_sort<J>(first, pivot, comp);
+    }
+  }
+}
+
 template <size_t I>
 struct all_less_
 {
-  template <typename TupleType>
-  typename enable_if<is_not_last<I, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_not_last<I, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    return get<I>(lhs) < get<I>(rhs) && all_less_<I + 1>()(lhs, rhs);
+    return less_nth<I>()(lhs, rhs) && all_less_<I + 1>()(lhs, rhs);
   }
-  template <typename TupleType>
-  typename enable_if<is_last<I, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs) const
+  template <typename T>
+  typename enable_if<is_last<I, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs) const
   {
-    return get<I>(lhs) < get<I>(rhs);
+    return less_nth<I>()(lhs, rhs);
   }
 };
 
@@ -307,17 +409,17 @@ bool all_less(const TupleType& lhs, const TupleType& rhs)
 template <size_t I>
 struct none_less_
 {
-  template <typename TupleType>
-  typename enable_if<is_not_last<I, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs)
+  template <typename T>
+  typename enable_if<is_not_last<I, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
   {
-    return get<I>(lhs) >= get<I>(rhs) && none_less_<I + 1>()(lhs, rhs);
+    return !less_nth<I>()(lhs, rhs) && none_less_<I + 1>()(lhs, rhs);
   }
-  template <typename TupleType>
-  typename enable_if<is_last<I, TupleType>::value, bool>::type
-  operator()(const TupleType& lhs, const TupleType& rhs)
+  template <typename T>
+  typename enable_if<is_last<I, T>::value, bool>::type
+  operator()(const T& lhs, const T& rhs)
   {
-    return get<I>(lhs) >= get<I>(rhs);
+    return !less_nth<I>()(lhs, rhs);
   }
 };
 
@@ -462,6 +564,33 @@ void kd_range_query(Iter first, Iter last,
   return;
 }
 
+template <size_t I,
+          typename Iter,
+          typename TupleType,
+          typename OutIter>
+void kd_rq_iters(Iter first, Iter last,
+                 const TupleType& lower,
+                 const TupleType& upper,
+                 OutIter outp)
+{
+  if (distance(first, last) > 32) {
+    auto pred = less_nth<I>();
+    auto pivot = find_pivot<I>(first, last);
+    constexpr auto J = next_dim<I, TupleType>::value;
+    if (within(*pivot, lower, upper)) *outp++ = pivot;
+    if (!pred(*pivot, lower)) // search left
+      kd_rq_iters<J>(first, pivot, lower, upper, outp);
+    if (pred(*pivot, upper)) // search right
+      kd_rq_iters<J>(next(pivot), last, lower, upper, outp);
+  } else {
+    while (first != last) {
+      if(within(*first, lower, upper)) *outp++ = first;
+      ++first;
+    }
+  }
+  return;
+}
+
 template <typename Iter, typename Key = double>
 struct n_best
 {
@@ -492,6 +621,15 @@ struct n_best
       m_q.pop();
     }
   }
+  template <typename OutIter>
+  void copy_iters_to(OutIter outp)
+  {
+    while (!m_q.empty())
+    {
+      *outp++ = m_q.top().second;
+      m_q.pop();
+    }
+  }
 };
 
 template <size_t I,
@@ -500,25 +638,25 @@ template <size_t I,
           typename QType>
 void knn(Iter first, Iter last,
          const TupleType& value,
-         QType& q)
+         QType& Q)
 {
   switch(distance(first, last)) {
-  case 1 : q.add(l2dist(*first, value), first);
+  case 1 : Q.add(l2dist(*first, value), first);
   case 0 : return; } // switch end
   auto pivot = find_pivot<I>(first, last);
-  q.add(l2dist(*pivot, value), pivot);
+  Q.add(l2dist(*pivot, value), pivot);
   auto search_left = less_nth<I>()(value, *pivot);
   constexpr auto J = next_dim<I, TupleType>::value;
   if (search_left)
-    knn<J>(first, pivot, value, q);
+    knn<J>(first, pivot, value, Q);
   else
-    knn<J>(next(pivot), last, value, q);
-  if (dist_nth<I>(value, *pivot) <= q.max_key())
+    knn<J>(next(pivot), last, value, Q);
+  if (dist_nth<I>(value, *pivot) <= Q.max_key())
   {
     if (search_left)
-      knn<J>(next(pivot), last, value, q);
+      knn<J>(next(pivot), last, value, Q);
     else
-      knn<J>(first, pivot, value, q);
+      knn<J>(first, pivot, value, Q);
   }
 }
 
@@ -540,6 +678,8 @@ using detail::next_dim;
 
 using detail::kd_less;
 using detail::less_nth;
+using detail::equal_nth;
+using detail::pred_nth;
 using detail::dist_nth;
 using detail::kd_compare;
 using detail::make_kd_compare;
@@ -637,13 +777,36 @@ void kd_range_query(Iter first, Iter last,
 template <typename Iter,
           typename TupleType,
           typename OutIter>
+void kd_rq_iters(Iter first, Iter last,
+                 const TupleType& lower,
+                 const TupleType& upper,
+                 OutIter outp)
+{
+  detail::kd_rq_iters<0>(first, last, lower, upper, outp);
+}
+
+template <typename Iter,
+          typename TupleType,
+          typename OutIter>
 void kd_nearest_neighbors(Iter first, Iter last,
                           const TupleType& value,
                           size_t n, OutIter outp)
 {
-  detail::n_best<Iter> q(n);
-  detail::knn<0>(first, last, value, q);
-  q.copy_to(outp);
+  detail::n_best<Iter> Q(n);
+  detail::knn<0>(first, last, value, Q);
+  Q.copy_to(outp);
+}
+
+template <typename Iter,
+          typename TupleType,
+          typename OutIter>
+void kd_nn_iters(Iter first, Iter last,
+                 const TupleType& value,
+                 size_t n, OutIter outp)
+{
+  detail::n_best<Iter> Q(n);
+  detail::knn<0>(first, last, value, Q);
+  Q.copy_iters_to(outp);
 }
 
 } // namespace kdtools

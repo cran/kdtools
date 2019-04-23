@@ -57,6 +57,10 @@ kd_range_query_ <- function(x, lower, upper) {
     .Call(`_kdtools_kd_range_query_`, x, lower, upper)
 }
 
+kd_rq_indices_ <- function(x, lower, upper) {
+    .Call(`_kdtools_kd_rq_indices_`, x, lower, upper)
+}
+
 kd_nearest_neighbor_ <- function(x, value) {
     .Call(`_kdtools_kd_nearest_neighbor_`, x, value)
 }
@@ -67,5 +71,13 @@ kd_binary_search_ <- function(x, value) {
 
 kd_nearest_neighbors_ <- function(x, value, n) {
     .Call(`_kdtools_kd_nearest_neighbors_`, x, value, n)
+}
+
+kd_nn_indices_ <- function(x, value, n) {
+    .Call(`_kdtools_kd_nn_indices_`, x, value, n)
+}
+
+kd_order_ <- function(x, parallel = FALSE) {
+    .Call(`_kdtools_kd_order_`, x, parallel)
 }
 

@@ -114,6 +114,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// kd_rq_indices_
+IntegerVector kd_rq_indices_(List x, NumericVector lower, NumericVector upper);
+RcppExport SEXP _kdtools_kd_rq_indices_(SEXP xSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type upper(upperSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_rq_indices_(x, lower, upper));
+    return rcpp_result_gen;
+END_RCPP
+}
 // kd_nearest_neighbor_
 int kd_nearest_neighbor_(List x, NumericVector value);
 RcppExport SEXP _kdtools_kd_nearest_neighbor_(SEXP xSEXP, SEXP valueSEXP) {
@@ -151,6 +164,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// kd_nn_indices_
+IntegerVector kd_nn_indices_(List x, NumericVector value, int n);
+RcppExport SEXP _kdtools_kd_nn_indices_(SEXP xSEXP, SEXP valueSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_nn_indices_(x, value, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_order_
+IntegerVector kd_order_(List x, bool parallel);
+RcppExport SEXP _kdtools_kd_order_(SEXP xSEXP, SEXP parallelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_order_(x, parallel));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_kdtools_matrix_to_tuples", (DL_FUNC) &_kdtools_matrix_to_tuples, 1},
@@ -162,9 +200,12 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kdtools_kd_lower_bound_", (DL_FUNC) &_kdtools_kd_lower_bound_, 2},
     {"_kdtools_kd_upper_bound_", (DL_FUNC) &_kdtools_kd_upper_bound_, 2},
     {"_kdtools_kd_range_query_", (DL_FUNC) &_kdtools_kd_range_query_, 3},
+    {"_kdtools_kd_rq_indices_", (DL_FUNC) &_kdtools_kd_rq_indices_, 3},
     {"_kdtools_kd_nearest_neighbor_", (DL_FUNC) &_kdtools_kd_nearest_neighbor_, 2},
     {"_kdtools_kd_binary_search_", (DL_FUNC) &_kdtools_kd_binary_search_, 2},
     {"_kdtools_kd_nearest_neighbors_", (DL_FUNC) &_kdtools_kd_nearest_neighbors_, 3},
+    {"_kdtools_kd_nn_indices_", (DL_FUNC) &_kdtools_kd_nn_indices_, 3},
+    {"_kdtools_kd_order_", (DL_FUNC) &_kdtools_kd_order_, 2},
     {NULL, NULL, 0}
 };
 

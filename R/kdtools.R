@@ -10,12 +10,17 @@ NULL
 #'   dimension. Ties are resolved by cycling over successive dimensions. The
 #'   result is an ordering of tuples matching their order if they were inserted
 #'   into a kd-tree.
+#'
+#'   \code{kd_order} returns permutation vector that will order
+#'   the rows of the original matrix, exactly as \code{\link{order}}.
 #' @note The matrix version will be slower because of data structure
 #'   conversions.
 #' @examples
-#' x = kd_sort(matrix(runif(200), 100))
-#' kd_is_sorted(x)
-#' plot(x, type = "o", pch = 19, col = "steelblue", asp = 1)
+#' x = matrix(runif(200), 100)
+#' y = kd_sort(x)
+#' kd_is_sorted(y)
+#' kd_order(x)
+#' plot(y, type = "o", pch = 19, col = "steelblue", asp = 1)
 #'
 #' @seealso \code{\link{arrayvec}}
 #' @rdname kdsort
@@ -32,6 +37,21 @@ kd_sort.matrix <- function(x, parallel = FALSE, ...) {
 #' @export
 kd_sort.arrayvec <- function(x, inplace = FALSE, parallel = FALSE, ...) {
   return(kd_sort_(x, inplace = inplace, parallel = parallel))
+}
+
+#' @rdname kdsort
+#' @export
+kd_order <- function(x, ...) UseMethod("kd_order")
+
+#' @export
+kd_order.matrix <- function(x, parallel = FALSE, ...) {
+  y <- matrix_to_tuples(x)
+  return(kd_order_(y, parallel = parallel))
+}
+
+#' @export
+kd_order.arrayvec <- function(x, parallel = FALSE, ...) {
+  return(kd_order_(x, parallel = parallel))
 }
 
 #' @rdname kdsort
@@ -83,6 +103,7 @@ lex_sort.arrayvec <- function(x, inplace = FALSE, ...) {
 #' y[kd_upper_bound(y, c(1/2, 1/2)),]
 #' kd_binary_search(y, c(1/2, 1/2))
 #' kd_range_query(y, c(1/3, 1/3), c(2/3, 2/3))
+#' kd_rq_indices(y, c(1/3, 1/3), c(2/3, 2/3))
 #'
 #' @aliases kd_lower_bound
 #' @rdname search
@@ -135,6 +156,21 @@ kd_range_query.arrayvec <- function(x, l, u) {
 
 #' @rdname search
 #' @export
+kd_rq_indices <- function(x, l, u) UseMethod("kd_rq_indices")
+
+#' @export
+kd_rq_indices.matrix <- function(x, l, u) {
+  y <- matrix_to_tuples(x)
+  return(kd_rq_indices_(y, l, u))
+}
+
+#' @export
+kd_rq_indices.arrayvec <- function(x, l, u) {
+  return(kd_rq_indices_(x, l, u))
+}
+
+#' @rdname search
+#' @export
 kd_binary_search <- function(x, v) UseMethod("kd_binary_search")
 
 #' @export
@@ -159,6 +195,7 @@ kd_binary_search.arrayvec <- function(x, v) {
 #' kd_sort(y, inplace = TRUE)
 #' y[kd_nearest_neighbor(y, c(1/2, 1/2)),]
 #' kd_nearest_neighbors(y, c(1/2, 1/2), 3)
+#' y[kd_nn_indices(y, c(1/2, 1/2), 5),]
 #'
 #' @rdname nneighb
 #' @export
@@ -174,6 +211,21 @@ kd_nearest_neighbors.matrix <- function(x, v, n) {
 #' @export
 kd_nearest_neighbors.arrayvec <- function(x, v, n) {
   return(kd_nearest_neighbors_(x, v, n))
+}
+
+#' @rdname nneighb
+#' @export
+kd_nn_indices <- function(x, v, n) UseMethod("kd_nn_indices")
+
+#' @export
+kd_nn_indices.matrix <- function(x, v, n) {
+  y <- matrix_to_tuples(x)
+  return(kd_nn_indices_(y, v, n))
+}
+
+#' @export
+kd_nn_indices.arrayvec <- function(x, v, n) {
+  return(kd_nn_indices_(x, v, n))
 }
 
 #' @rdname nneighb

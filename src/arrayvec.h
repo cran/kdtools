@@ -3,6 +3,7 @@
 
 #include <Rcpp.h>
 using Rcpp::NumericVector;
+using Rcpp::IntegerVector;
 using Rcpp::NumericMatrix;
 using Rcpp::stop;
 using Rcpp::XPtr;
@@ -25,6 +26,7 @@ using std::string;
 
 #include <iterator>
 using std::back_inserter;
+using std::distance;
 using std::begin;
 using std::end;
 
@@ -32,7 +34,13 @@ using std::end;
 using strider::make_strided;
 
 template <size_t I>
-using arrayvec = vector<array<double, I>>;
+using vec_type = array<double, I>;
+
+template <size_t I>
+using arrayvec = vector<vec_type<I>>;
+
+template <size_t I>
+using av_iter = typename arrayvec<I>::iterator;
 
 template <typename T>
 XPtr<T> make_xptr(T* x)
@@ -61,7 +69,7 @@ List matrix_to_tuples_(const NumericMatrix& x)
   transform(begin(x), begin(x) + nr, oi,
             [&](const double& v)
             {
-              array<double, I> a;
+              vec_type<I> a;
               auto i = make_strided(&v, nr);
               copy(i, i + I, begin(a));
               return a;
@@ -110,11 +118,11 @@ NumericMatrix tuples_to_matrix_(List x, size_t a, size_t b)
 }
 
 template <size_t I>
-array<double, I> vec_to_array(const NumericVector& x)
+vec_type<I> vec_to_array(const NumericVector& x)
 {
   if (x.length() != I)
     stop("Invalid dimensions for value");
-  array<double, I> y;
+  vec_type<I> y;
   copy(begin(x), end(x), begin(y));
   return y;
 }
