@@ -1,14 +1,22 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, echo=FALSE---------------------------------------------------
 use_cached_data = TRUE
+suppressPackageStartupMessages({
+  has_packages =
+    require(kdtools, quietly = TRUE) &&
+    require(ggplot2, quietly = TRUE) &&
+    require(tidytext, quietly = TRUE) &&
+    require(printr, quietly = TRUE) &&
+    require(scales, quietly = TRUE) &&
+    require(BH, quietly = TRUE)
+})
+if (!has_packages) cat("Some required packages not available; results will not be evaluated\n")
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = has_packages
 )
-library(kdtools)
-library(ggplot2)
-library(tidytext)
-library(printr)
-library(scales)
+
+## ----include=FALSE-------------------------------------------------------
 theme_set(theme_classic())
 bench_ntuples = 1e7
 bench_ntrials = 21

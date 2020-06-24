@@ -1,7 +1,10 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, echo=FALSE---------------------------------------------------
+has_kdtools = require(kdtools, quietly = TRUE)
+if (!has_kdtools) cat("kdtools package not installed; results not evaluted\n")
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = has_kdtools
 )
 
 ## ------------------------------------------------------------------------
