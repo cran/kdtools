@@ -4,19 +4,43 @@
 \alias{kd_lower_bound}
 \alias{kd_upper_bound}
 \alias{kd_range_query}
+\alias{kd_range_query.matrix}
+\alias{kd_range_query.arrayvec}
+\alias{kd_range_query.data.frame}
 \alias{kd_rq_indices}
+\alias{kd_rq_indices.matrix}
+\alias{kd_rq_indices.arrayvec}
+\alias{kd_rq_indices.data.frame}
 \alias{kd_binary_search}
+\alias{kd_binary_search.matrix}
+\alias{kd_binary_search.arrayvec}
 \title{Search sorted data}
 \usage{
 kd_lower_bound(x, v)
 
 kd_upper_bound(x, v)
 
-kd_range_query(x, l, u)
+kd_range_query(x, l, u, ...)
 
-kd_rq_indices(x, l, u)
+\method{kd_range_query}{matrix}(x, l, u, ...)
+
+\method{kd_range_query}{arrayvec}(x, l, u, ...)
+
+\method{kd_range_query}{data.frame}(x, l, u, cols = 1:ncol(x), ...)
+
+kd_rq_indices(x, l, u, ...)
+
+\method{kd_rq_indices}{matrix}(x, l, u, ...)
+
+\method{kd_rq_indices}{arrayvec}(x, l, u, ...)
+
+\method{kd_rq_indices}{data.frame}(x, l, u, cols = 1:ncol(x), ...)
 
 kd_binary_search(x, v)
+
+\method{kd_binary_search}{matrix}(x, v)
+
+\method{kd_binary_search}{arrayvec}(x, v)
 }
 \arguments{
 \item{x}{an object sorted by \code{\link{kd_sort}}}
@@ -26,6 +50,17 @@ kd_binary_search(x, v)
 \item{l}{lower left corner of search region}
 
 \item{u}{upper right corner of search region}
+
+\item{...}{additional arguments}
+
+\item{cols}{integer vector of column indices}
+}
+\value{
+\tabular{ll}{\code{kd_lower_bound} \tab a row of values (vector) \cr
+  \code{kd_upper_bound} \tab a row of values (vector) \cr
+  \code{kd_range_query} \tab a set of rows in the same format as the sorted input \cr
+  \code{kd_rq_indices} \tab a vector of integer indices specifying rows in the input \cr
+  \code{kd_binary_search} \tab a boolean \cr}
 }
 \description{
 Search sorted data

@@ -41,6 +41,90 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// kd_order_df_no_validation
+IntegerVector kd_order_df_no_validation(const List& df, const IntegerVector& idx, bool parallel);
+RcppExport SEXP _kdtools_kd_order_df_no_validation(SEXP dfSEXP, SEXP idxSEXP, SEXP parallelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_order_df_no_validation(df, idx, parallel));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_order_df
+IntegerVector kd_order_df(const List& df, const IntegerVector& idx, bool parallel);
+RcppExport SEXP _kdtools_kd_order_df(SEXP dfSEXP, SEXP idxSEXP, SEXP parallelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_order_df(df, idx, parallel));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_rq_df_no_validation
+std::vector<int> kd_rq_df_no_validation(const List& df, const IntegerVector& idx, const List& lower, const List& upper);
+RcppExport SEXP _kdtools_kd_rq_df_no_validation(SEXP dfSEXP, SEXP idxSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const List& >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< const List& >::type upper(upperSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_rq_df_no_validation(df, idx, lower, upper));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_rq_df
+std::vector<int> kd_rq_df(const List& df, const IntegerVector& idx, const List& lower, const List& upper);
+RcppExport SEXP _kdtools_kd_rq_df(SEXP dfSEXP, SEXP idxSEXP, SEXP lowerSEXP, SEXP upperSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const List& >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< const List& >::type upper(upperSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_rq_df(df, idx, lower, upper));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_nn_df_no_validation
+std::vector<int> kd_nn_df_no_validation(const List& df, const IntegerVector& idx, const NumericVector& w, const List& key, const int n);
+RcppExport SEXP _kdtools_kd_nn_df_no_validation(SEXP dfSEXP, SEXP idxSEXP, SEXP wSEXP, SEXP keySEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< const List& >::type key(keySEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_nn_df_no_validation(df, idx, w, key, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_nn_df
+std::vector<int> kd_nn_df(const List& df, const IntegerVector& idx, const NumericVector& w, const List& key, const int n);
+RcppExport SEXP _kdtools_kd_nn_df(SEXP dfSEXP, SEXP idxSEXP, SEXP wSEXP, SEXP keySEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type df(dfSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< const List& >::type key(keySEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_nn_df(df, idx, w, key, n));
+    return rcpp_result_gen;
+END_RCPP
+}
 // kd_sort_
 List kd_sort_(List x, bool inplace, bool parallel);
 RcppExport SEXP _kdtools_kd_sort_(SEXP xSEXP, SEXP inplaceSEXP, SEXP parallelSEXP) {
@@ -55,13 +139,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // kd_is_sorted_
-bool kd_is_sorted_(List x);
-RcppExport SEXP _kdtools_kd_is_sorted_(SEXP xSEXP) {
+bool kd_is_sorted_(List x, bool parallel);
+RcppExport SEXP _kdtools_kd_is_sorted_(SEXP xSEXP, SEXP parallelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(kd_is_sorted_(x));
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_is_sorted_(x, parallel));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -127,6 +212,32 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// kd_rq_circular_
+List kd_rq_circular_(List x, NumericVector center, double radius);
+RcppExport SEXP _kdtools_kd_rq_circular_(SEXP xSEXP, SEXP centerSEXP, SEXP radiusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type center(centerSEXP);
+    Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_rq_circular_(x, center, radius));
+    return rcpp_result_gen;
+END_RCPP
+}
+// kd_rqi_circular_
+IntegerVector kd_rqi_circular_(List x, NumericVector center, double radius);
+RcppExport SEXP _kdtools_kd_rqi_circular_(SEXP xSEXP, SEXP centerSEXP, SEXP radiusSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type center(centerSEXP);
+    Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
+    rcpp_result_gen = Rcpp::wrap(kd_rqi_circular_(x, center, radius));
+    return rcpp_result_gen;
+END_RCPP
+}
 // kd_nearest_neighbor_
 int kd_nearest_neighbor_(List x, NumericVector value);
 RcppExport SEXP _kdtools_kd_nearest_neighbor_(SEXP xSEXP, SEXP valueSEXP) {
@@ -178,14 +289,37 @@ BEGIN_RCPP
 END_RCPP
 }
 // kd_order_
-IntegerVector kd_order_(List x, bool parallel);
-RcppExport SEXP _kdtools_kd_order_(SEXP xSEXP, SEXP parallelSEXP) {
+IntegerVector kd_order_(List x, bool inplace, bool parallel);
+RcppExport SEXP _kdtools_kd_order_(SEXP xSEXP, SEXP inplaceSEXP, SEXP parallelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< List >::type x(xSEXP);
+    Rcpp::traits::input_parameter< bool >::type inplace(inplaceSEXP);
     Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(kd_order_(x, parallel));
+    rcpp_result_gen = Rcpp::wrap(kd_order_(x, inplace, parallel));
+    return rcpp_result_gen;
+END_RCPP
+}
+// using_circular_lexicographical_compare
+bool using_circular_lexicographical_compare();
+RcppExport SEXP _kdtools_using_circular_lexicographical_compare() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(using_circular_lexicographical_compare());
+    return rcpp_result_gen;
+END_RCPP
+}
+// levenshtein
+int levenshtein(const char* s1, const char* s2);
+RcppExport SEXP _kdtools_levenshtein(SEXP s1SEXP, SEXP s2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const char* >::type s1(s1SEXP);
+    Rcpp::traits::input_parameter< const char* >::type s2(s2SEXP);
+    rcpp_result_gen = Rcpp::wrap(levenshtein(s1, s2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -194,18 +328,28 @@ static const R_CallMethodDef CallEntries[] = {
     {"_kdtools_matrix_to_tuples", (DL_FUNC) &_kdtools_matrix_to_tuples, 1},
     {"_kdtools_tuples_to_matrix", (DL_FUNC) &_kdtools_tuples_to_matrix, 1},
     {"_kdtools_tuples_to_matrix_rows", (DL_FUNC) &_kdtools_tuples_to_matrix_rows, 3},
+    {"_kdtools_kd_order_df_no_validation", (DL_FUNC) &_kdtools_kd_order_df_no_validation, 3},
+    {"_kdtools_kd_order_df", (DL_FUNC) &_kdtools_kd_order_df, 3},
+    {"_kdtools_kd_rq_df_no_validation", (DL_FUNC) &_kdtools_kd_rq_df_no_validation, 4},
+    {"_kdtools_kd_rq_df", (DL_FUNC) &_kdtools_kd_rq_df, 4},
+    {"_kdtools_kd_nn_df_no_validation", (DL_FUNC) &_kdtools_kd_nn_df_no_validation, 5},
+    {"_kdtools_kd_nn_df", (DL_FUNC) &_kdtools_kd_nn_df, 5},
     {"_kdtools_kd_sort_", (DL_FUNC) &_kdtools_kd_sort_, 3},
-    {"_kdtools_kd_is_sorted_", (DL_FUNC) &_kdtools_kd_is_sorted_, 1},
+    {"_kdtools_kd_is_sorted_", (DL_FUNC) &_kdtools_kd_is_sorted_, 2},
     {"_kdtools_lex_sort_", (DL_FUNC) &_kdtools_lex_sort_, 2},
     {"_kdtools_kd_lower_bound_", (DL_FUNC) &_kdtools_kd_lower_bound_, 2},
     {"_kdtools_kd_upper_bound_", (DL_FUNC) &_kdtools_kd_upper_bound_, 2},
     {"_kdtools_kd_range_query_", (DL_FUNC) &_kdtools_kd_range_query_, 3},
     {"_kdtools_kd_rq_indices_", (DL_FUNC) &_kdtools_kd_rq_indices_, 3},
+    {"_kdtools_kd_rq_circular_", (DL_FUNC) &_kdtools_kd_rq_circular_, 3},
+    {"_kdtools_kd_rqi_circular_", (DL_FUNC) &_kdtools_kd_rqi_circular_, 3},
     {"_kdtools_kd_nearest_neighbor_", (DL_FUNC) &_kdtools_kd_nearest_neighbor_, 2},
     {"_kdtools_kd_binary_search_", (DL_FUNC) &_kdtools_kd_binary_search_, 2},
     {"_kdtools_kd_nearest_neighbors_", (DL_FUNC) &_kdtools_kd_nearest_neighbors_, 3},
     {"_kdtools_kd_nn_indices_", (DL_FUNC) &_kdtools_kd_nn_indices_, 3},
-    {"_kdtools_kd_order_", (DL_FUNC) &_kdtools_kd_order_, 2},
+    {"_kdtools_kd_order_", (DL_FUNC) &_kdtools_kd_order_, 3},
+    {"_kdtools_using_circular_lexicographical_compare", (DL_FUNC) &_kdtools_using_circular_lexicographical_compare, 0},
+    {"_kdtools_levenshtein", (DL_FUNC) &_kdtools_levenshtein, 2},
     {NULL, NULL, 0}
 };
 

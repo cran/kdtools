@@ -33,15 +33,39 @@ tuples_to_matrix_rows <- function(x, a, b) {
     .Call(`_kdtools_tuples_to_matrix_rows`, x, a, b)
 }
 
-kd_sort_ <- function(x, inplace = FALSE, parallel = FALSE) {
+kd_order_df_no_validation <- function(df, idx, parallel = TRUE) {
+    .Call(`_kdtools_kd_order_df_no_validation`, df, idx, parallel)
+}
+
+kd_order_df <- function(df, idx, parallel = TRUE) {
+    .Call(`_kdtools_kd_order_df`, df, idx, parallel)
+}
+
+kd_rq_df_no_validation <- function(df, idx, lower, upper) {
+    .Call(`_kdtools_kd_rq_df_no_validation`, df, idx, lower, upper)
+}
+
+kd_rq_df <- function(df, idx, lower, upper) {
+    .Call(`_kdtools_kd_rq_df`, df, idx, lower, upper)
+}
+
+kd_nn_df_no_validation <- function(df, idx, w, key, n) {
+    .Call(`_kdtools_kd_nn_df_no_validation`, df, idx, w, key, n)
+}
+
+kd_nn_df <- function(df, idx, w, key, n) {
+    .Call(`_kdtools_kd_nn_df`, df, idx, w, key, n)
+}
+
+kd_sort_ <- function(x, inplace, parallel) {
     .Call(`_kdtools_kd_sort_`, x, inplace, parallel)
 }
 
-kd_is_sorted_ <- function(x) {
-    .Call(`_kdtools_kd_is_sorted_`, x)
+kd_is_sorted_ <- function(x, parallel) {
+    .Call(`_kdtools_kd_is_sorted_`, x, parallel)
 }
 
-lex_sort_ <- function(x, inplace = FALSE) {
+lex_sort_ <- function(x, inplace) {
     .Call(`_kdtools_lex_sort_`, x, inplace)
 }
 
@@ -61,6 +85,14 @@ kd_rq_indices_ <- function(x, lower, upper) {
     .Call(`_kdtools_kd_rq_indices_`, x, lower, upper)
 }
 
+kd_rq_circular_ <- function(x, center, radius) {
+    .Call(`_kdtools_kd_rq_circular_`, x, center, radius)
+}
+
+kd_rqi_circular_ <- function(x, center, radius) {
+    .Call(`_kdtools_kd_rqi_circular_`, x, center, radius)
+}
+
 kd_nearest_neighbor_ <- function(x, value) {
     .Call(`_kdtools_kd_nearest_neighbor_`, x, value)
 }
@@ -77,7 +109,15 @@ kd_nn_indices_ <- function(x, value, n) {
     .Call(`_kdtools_kd_nn_indices_`, x, value, n)
 }
 
-kd_order_ <- function(x, parallel = FALSE) {
-    .Call(`_kdtools_kd_order_`, x, parallel)
+kd_order_ <- function(x, inplace, parallel) {
+    .Call(`_kdtools_kd_order_`, x, inplace, parallel)
+}
+
+using_circular_lexicographical_compare <- function() {
+    .Call(`_kdtools_using_circular_lexicographical_compare`)
+}
+
+levenshtein <- function(s1, s2) {
+    .Call(`_kdtools_levenshtein`, s1, s2)
 }
 

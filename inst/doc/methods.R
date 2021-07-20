@@ -1,27 +1,23 @@
-## ----setup, echo=FALSE---------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 use_cached_data = TRUE
-suppressPackageStartupMessages({
-  has_packages =
-    require(kdtools, quietly = TRUE) &&
-    require(ggplot2, quietly = TRUE) &&
-    require(tidytext, quietly = TRUE) &&
-    require(printr, quietly = TRUE) &&
-    require(scales, quietly = TRUE) &&
-    require(BH, quietly = TRUE)
-})
-if (!has_packages) cat("Some required packages not available; results will not be evaluated\n")
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  eval = has_packages
-)
-
-## ----include=FALSE-------------------------------------------------------
+has_pkgs = require(kdtools) &&
+  require(ggplot2) &&
+  require(tidytext) &&
+  require(printr) &&
+  require(scales)
 theme_set(theme_classic())
 bench_ntuples = 1e7
 bench_ntrials = 21
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = has_pkgs
+)
 
-## ----echo=FALSE, fig.width=6, fig.height=6-------------------------------
+## ----eval=!has_pkgs, echo=FALSE-----------------------------------------------
+#  message("Required packages missing -- code will not be evaluated")
+
+## ----echo=FALSE, fig.width=6, fig.height=6------------------------------------
 nr = 5e3
 x = matrix(runif(nr), nc = 2)
 y = kd_sort(matrix_to_tuples(x))
@@ -33,10 +29,10 @@ ggplot(z, aes(x, y)) +
   geom_point(size = 0.25) + 
   geom_point(aes(color = i), alpha = 0.15, size = 5) +
   scale_color_gradientn(colors = rainbow(100, s = 0.8, v = 0.8)) +
-  guides(color = FALSE) +
+  guides(color = "none") +
   coord_fixed()
 
-## ----include=FALSE-------------------------------------------------------
+## ----include=FALSE------------------------------------------------------------
 cache_file = "../inst/extdata/sort_benchmark_data"
 if (!file.exists(cache_file))
   cache_file = system.file("extdata/sort_benchmark_data", package = "kdtools")
@@ -81,7 +77,7 @@ if (use_cached_data && file.exists(cache_file)) {
   save(res, file = cache_file)
 }
 
-## ----echo=FALSE, fig.width=7---------------------------------------------
+## ----echo=FALSE, fig.width=7--------------------------------------------------
 ggplot(res) +
   geom_line(aes(x = ntuples, y = time, color = as.factor(ndim))) +
   scale_x_continuous("Number of Tuples",
@@ -94,7 +90,7 @@ ggplot(res) +
        x = "Number of tuples",
        y = "Time (seconds)")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 j = cbind(sample(1:9))
 k = cbind(sample(1:9))
 t(kd_sort(j))
@@ -103,7 +99,7 @@ t(kd_sort(cbind(0, j, k)))
 t(kd_sort(cbind(j, k, 0)))
 t(kd_sort(cbind(0, j, 0)))
 
-## ----fig.width=5, fig.height=5, echo=FALSE-------------------------------
+## ----fig.width=5, fig.height=5, echo=FALSE------------------------------------
 xy = matrix(runif(1e3), nc = 2)
 p = c(0.33, 0.33, 0.66, 0.66)
 xy = kd_sort(xy)
@@ -130,12 +126,12 @@ ggplot(df, aes(x, y)) +
   geom_hline(yintercept = p[2], color = "red") +
   geom_vline(xintercept = p[3], color = "red") +
   geom_hline(yintercept = p[4], color = "red") +
-  guides(color = FALSE) +
+  guides(color = "none") +
   coord_fixed() +
   facet_wrap(~j) + 
   theme(strip.background = element_blank())
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 cache_file = "../inst/extdata/query_benchmark_data"
 if (!file.exists(cache_file))
   cache_file = system.file("extdata/query_benchmark_data", package = "kdtools")
@@ -153,7 +149,7 @@ if (use_cached_data && file.exists(cache_file)) {
 build
 query
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE--------------------------------------------------------------
 cache_file = "../inst/extdata/nn_benchmark_data"
 if (!file.exists(cache_file))
   cache_file = system.file("extdata/nn_benchmark_data", package = "kdtools")
@@ -162,8 +158,8 @@ if (use_cached_data && file.exists(cache_file)) {
 } else {
   res = as.data.frame(time_nn(bench_ntuples, bench_ntrials))
   res$Time = signif(res$Time, 3)
-  res1 = res[1:3,]
-  res2 = res[4:6,]
+  res1 = res[1:4,]
+  res2 = res[5:8,]
   rownames(res2) = NULL
   res1$Ratio = signif(res1$Time / res1$Time[1], 2)
   res2$Ratio = signif(res2$Time / res2$Time[1], 2)
@@ -172,7 +168,7 @@ if (use_cached_data && file.exists(cache_file)) {
 res1
 res2
 
-## ----include=FALSE-------------------------------------------------------
+## ----include=FALSE------------------------------------------------------------
 header_code = '
 #include <Rcpp.h>
 using Rcpp::CharacterVector;
@@ -187,7 +183,6 @@ using std::begin;
 using std::end;
 
 #include <tuple>
-using std::tuple;
 
 #include <vector>
 using std::vector;
@@ -195,12 +190,15 @@ using std::vector;
 #include <string>
 using std::string;
 
+#define NO_TUPLEMAPR
+
 #include <kdtools.h>
+using namespace keittlab;
 using kdtools::kd_sort;
 using kdtools::kd_range_query;
 using kdtools::kd_nearest_neighbors;
 
-using key_type = tuple<double, string>;
+using key_type = std::tuple<double, string>;
 using range_type = vector<key_type>;
 using pointers_type = vector<key_type*>;
 
@@ -281,6 +279,7 @@ double set_similarity(InputIt1 first1, InputIt1 last1,
   return num / denom;
 }
 
+namespace keittlab {
 namespace kdtools {
 
 template <>
@@ -294,6 +293,7 @@ double scalar_diff(const std::string& lhs, const std::string& rhs)
 }
 
 } // namespace kdtools
+} // namespace keittlab
 '
 
 header_file = "mixed_query.h"
@@ -302,12 +302,12 @@ pkg_cppflags = Sys.getenv("PKG_CPPFLAGS")
 pkg_cppflags = paste(pkg_cppflags, paste0("-I\"", tempdir(), "\""))
 Sys.setenv(PKG_CPPFLAGS = pkg_cppflags)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data("parts_of_speech")
 numbers = signif(runif(nrow(parts_of_speech)), 4)
 strings = sample(tolower(parts_of_speech[[1]]))
 mixed_query(numbers, strings)
 
-## ------------------------------------------------------------------------
-#sort_pointers(numbers, strings)
+## -----------------------------------------------------------------------------
+sort_pointers(numbers, strings)
 

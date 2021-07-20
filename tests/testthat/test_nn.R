@@ -7,17 +7,37 @@ r_nn <- function(x, y) {
                    FUN.VALUE = double(1)))
 }
 
-test_that("nearest neighbors works", {
+mk_ties <- function(nc) {
+  x <- double()
+  for (i in 1:nc)
+    x <- cbind(x, sample(1:5))
+  i <- sample(1:5, 100, replace = TRUE)
+  return(as.matrix(x[i,]))
+}
+
+pair_dist <- function(a, b) sqrt(sum((a - b)^2))
+
+test_that("nearest neighbor works", {
   for (ignore in 1:10)
   {
     for (n in 1:9)
     {
-      x <- matrix(runif(n * 100), nc = n)
+      x <- matrix(runif(n * 100), ncol = n)
       x <- kd_sort(x)
       y <- runif(n)
       i <- kd_nearest_neighbor(x, y)
       j <- r_nn(x, y)
       expect_equal(i, j)
+    }
+    for (n in 1:9)
+    {
+      x <- mk_ties(n)
+      x <- kd_sort(x)
+      y <- runif(n, 1, 5)
+      i <- kd_nearest_neighbor(x, y)
+      j <- r_nn(x, y)
+      expect_equal(pair_dist(y, x[i,]),
+                   pair_dist(y, x[j,]))
     }
   }
 })
@@ -26,7 +46,7 @@ r_nns <- function(x, y, n) {
   i = vapply(seq_len(nrow(x)),
              function(i) { dist(rbind(x[i, ], y)) },
              FUN.VALUE = double(1))
-  x[which(rank(i) <= n),, drop = FALSE]
+  x[which(rank(i, ties.method = "first") <= n),, drop = FALSE]
 }
 
 test_that("nearest neighbors works", {
@@ -36,7 +56,19 @@ test_that("nearest neighbors works", {
     {
       for (m in c(1, 10, 2 * n * 100))
       {
-        x <- matrix(runif(n * 100), nc = n)
+        x <- matrix(runif(n * 100), ncol = n)
+        x <- kd_sort(x)
+        y <- runif(n)
+        z1 <- kd_nearest_neighbors(x, y, m)
+        z2 <- r_nns(x, y, m)
+        expect_equal(kd_sort(z1), kd_sort(z2))
+      }
+    }
+    for (n in 1:9)
+    {
+      for (m in c(1, 10, 2 * n * 100))
+      {
+        x <- mk_ties(n)
         x <- kd_sort(x)
         y <- runif(n)
         z1 <- kd_nearest_neighbors(x, y, m)
@@ -51,7 +83,7 @@ r_nns_i <- function(x, y, n) {
   i = vapply(seq_len(nrow(x)),
              function(i) { dist(rbind(x[i, ], y)) },
              FUN.VALUE = double(1))
-  which(rank(i) <= n)
+  which(rank(i, ties.method = "first") <= n)
 }
 
 test_that("nearest neighbors indices works", {
@@ -61,7 +93,7 @@ test_that("nearest neighbors indices works", {
     {
       for (m in c(1, 10, 2 * n * 100))
       {
-        x <- matrix(runif(n * 100), nc = n)
+        x <- matrix(runif(n * 100), ncol = n)
         x <- kd_sort(x)
         y <- runif(n)
         z1 <- kd_nn_indices(x, y, m)
