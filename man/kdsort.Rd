@@ -5,6 +5,7 @@
 \alias{kd_sort.matrix}
 \alias{kd_sort.arrayvec}
 \alias{kd_sort.data.frame}
+\alias{kd_sort.sf}
 \alias{kd_order}
 \alias{kd_order.matrix}
 \alias{kd_order.arrayvec}
@@ -14,19 +15,21 @@
 \usage{
 kd_sort(x, ...)
 
-\method{kd_sort}{matrix}(x, parallel = TRUE, ...)
+\method{kd_sort}{matrix}(x, cols = NULL, parallel = TRUE, ...)
 
 \method{kd_sort}{arrayvec}(x, inplace = FALSE, parallel = TRUE, ...)
 
-\method{kd_sort}{data.frame}(x, cols = 1:ncol(x), parallel = TRUE, ...)
+\method{kd_sort}{data.frame}(x, cols = NULL, parallel = TRUE, ...)
+
+\method{kd_sort}{sf}(x, cols = NULL, parallel = TRUE, ...)
 
 kd_order(x, ...)
 
-\method{kd_order}{matrix}(x, parallel = TRUE, ...)
+\method{kd_order}{matrix}(x, cols = NULL, parallel = TRUE, ...)
 
 \method{kd_order}{arrayvec}(x, inplace = FALSE, parallel = TRUE, ...)
 
-\method{kd_order}{data.frame}(x, cols = 1:ncol(x), parallel = TRUE, ...)
+\method{kd_order}{data.frame}(x, cols = NULL, parallel = TRUE, ...)
 
 kd_is_sorted(x, ...)
 }
@@ -35,11 +38,11 @@ kd_is_sorted(x, ...)
 
 \item{...}{ignored}
 
+\item{cols}{integer vector of column indices}
+
 \item{parallel}{use multiple threads if true}
 
 \item{inplace}{sort as a side-effect if true}
-
-\item{cols}{integer vector of column indices}
 }
 \value{
 \tabular{ll}{\code{kd_sort} \tab the table sorted in kd-tree order
@@ -51,7 +54,7 @@ Sort multidimensional data
 }
 \details{
 The algorithm used is a divide-and-conquer quicksort variant that
-  recursively partions an range of tuples using the median of each successive
+  recursively partitions an range of tuples using the median of each successive
   dimension. Ties are resolved by cycling over successive dimensions. The
   result is an ordering of tuples matching their order if they were inserted
   into a kd-tree.
@@ -72,6 +75,7 @@ The matrix version will be slower because of data structure
   conversions.
 }
 \examples{
+if (has_cxx17()) {
 z <- data.frame(real = runif(10), lgl = runif(10) > 0.5,
                 int = as.integer(rpois(10, 2)), char = sample(month.name, 10),
                 stringsAsFactors = FALSE)
@@ -81,6 +85,7 @@ y <- kd_sort(x)
 kd_is_sorted(y)
 kd_order(x)
 plot(y, type = "o", pch = 19, col = "steelblue", asp = 1)
+}
 }
 \seealso{
 \code{\link{arrayvec}}

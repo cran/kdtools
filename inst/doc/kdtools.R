@@ -1,13 +1,17 @@
 ## ----setup, include=FALSE-----------------------------------------------------
-has_pkgs = require(kdtools)
+can_run = require(kdtools) && kdtools::has_cxx17()
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = has_pkgs
+  eval = can_run
 )
 
-## ----eval=!has_pkgs, echo=FALSE-----------------------------------------------
-#  message("kdtools package not available, code will not be evaluated")
+## ----eval=!can_run, echo=FALSE------------------------------------------------
+#  if (has_cxx17()) {
+#    message("kdtools package not available, code will not be evaluated")
+#  } else {
+#    message("kdtools needs C++17 for full functionality, code will not be evaluated")
+#  }
 
 ## -----------------------------------------------------------------------------
 # sort by weight, miles-per-gallon and displacement

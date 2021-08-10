@@ -1,5 +1,14 @@
 library(kdtools)
-context("Nearest neighbor")
+context("Nearest neighbor arrayvec")
+
+reps <- 5
+nci <- seq(1, 9, 2)
+
+to_av <- function(x) matrix_to_tuples(as.matrix(x))
+mk_av <- function(...) {
+  x <- do.call("matrix", list(...))
+  return(matrix_to_tuples(x))
+}
 
 r_nn <- function(x, y) {
   which.min(vapply(seq_len(nrow(x)),
@@ -12,24 +21,24 @@ mk_ties <- function(nc) {
   for (i in 1:nc)
     x <- cbind(x, sample(1:5))
   i <- sample(1:5, 100, replace = TRUE)
-  return(as.matrix(x[i,]))
+  return(to_av(x[i,]))
 }
 
 pair_dist <- function(a, b) sqrt(sum((a - b)^2))
 
 test_that("nearest neighbor works", {
-  for (ignore in 1:10)
+  for (ignore in 1:reps)
   {
-    for (n in 1:9)
+    for (n in nci)
     {
-      x <- matrix(runif(n * 100), ncol = n)
+      x <- mk_av(runif(n * 100), ncol = n)
       x <- kd_sort(x)
       y <- runif(n)
       i <- kd_nearest_neighbor(x, y)
       j <- r_nn(x, y)
       expect_equal(i, j)
     }
-    for (n in 1:9)
+    for (n in nci)
     {
       x <- mk_ties(n)
       x <- kd_sort(x)
@@ -50,29 +59,29 @@ r_nns <- function(x, y, n) {
 }
 
 test_that("nearest neighbors works", {
-  for (ignore in 1:10)
+  for (ignore in 1:reps)
   {
-    for (n in 1:9)
+    for (n in nci)
     {
       for (m in c(1, 10, 2 * n * 100))
       {
-        x <- matrix(runif(n * 100), ncol = n)
+        x <- mk_av(runif(n * 100), ncol = n)
         x <- kd_sort(x)
         y <- runif(n)
-        z1 <- kd_nearest_neighbors(x, y, m)
-        z2 <- r_nns(x, y, m)
+        z1 <- tuples_to_matrix(kd_nearest_neighbors(x, y, m))
+        z2 <- r_nns(tuples_to_matrix(x), y, m)
         expect_equal(kd_sort(z1), kd_sort(z2))
       }
     }
-    for (n in 1:9)
+    for (n in nci)
     {
       for (m in c(1, 10, 2 * n * 100))
       {
         x <- mk_ties(n)
         x <- kd_sort(x)
         y <- runif(n)
-        z1 <- kd_nearest_neighbors(x, y, m)
-        z2 <- r_nns(x, y, m)
+        z1 <- tuples_to_matrix(kd_nearest_neighbors(x, y, m))
+        z2 <- r_nns(tuples_to_matrix(x), y, m)
         expect_equal(kd_sort(z1), kd_sort(z2))
       }
     }
@@ -87,13 +96,13 @@ r_nns_i <- function(x, y, n) {
 }
 
 test_that("nearest neighbors indices works", {
-  for (ignore in 1:10)
+  for (ignore in 1:reps)
   {
-    for (n in 1:9)
+    for (n in nci)
     {
       for (m in c(1, 10, 2 * n * 100))
       {
-        x <- matrix(runif(n * 100), ncol = n)
+        x <- mk_av(runif(n * 100), ncol = n)
         x <- kd_sort(x)
         y <- runif(n)
         z1 <- kd_nn_indices(x, y, m)

@@ -1,21 +1,26 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 use_cached_data = TRUE
-has_pkgs = require(kdtools) &&
+can_run = require(kdtools) &&
   require(ggplot2) &&
   require(tidytext) &&
   require(printr) &&
-  require(scales)
+  require(scales) &&
+  kdtools::has_cxx17()
 theme_set(theme_classic())
 bench_ntuples = 1e7
 bench_ntrials = 21
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = has_pkgs
+  eval = can_run
 )
 
-## ----eval=!has_pkgs, echo=FALSE-----------------------------------------------
-#  message("Required packages missing -- code will not be evaluated")
+## ----eval=!can_run, echo=FALSE------------------------------------------------
+#  if (has_cxx17()) {
+#    message("Required packages missing -- code will not be evaluated")
+#  } else {
+#    message("kdtools needs C++17 for full functionality, code will not be evaluated")
+#  }
 
 ## ----echo=FALSE, fig.width=6, fig.height=6------------------------------------
 nr = 5e3
