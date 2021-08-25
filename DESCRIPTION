@@ -1,7 +1,7 @@
 Package: kdtools
 Type: Package
 Title: Tools for Working with Multidimensional Data
-Version: 0.5.1
+Version: 0.5.2
 Authors@R: person("Timothy", "Keitt", email = "tkeitt@gmail.com", role = c("aut", "cre"))
 Description: Provides various tools for working with multidimensional
   data in R and C++, including extremely fast nearest-neighbor- and range-
@@ -18,8 +18,8 @@ URL: https://github.com/thk686/kdtools
 BugReports: https://github.com/thk686/kdtools/issues
 Biarch: true
 NeedsCompilation: yes
-Packaged: 2021-08-09 22:11:39 UTC; tkeitt
+Packaged: 2021-08-11 03:12:11 UTC; tkeitt
 Author: Timothy Keitt [aut, cre]
 Maintainer: Timothy Keitt <tkeitt@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-08-10 09:10:08 UTC
+Date/Publication: 2021-08-25 14:00:02 UTC

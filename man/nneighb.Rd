@@ -6,8 +6,8 @@
 \alias{kd_nearest_neighbors.arrayvec}
 \alias{kd_nearest_neighbors.data.frame}
 \alias{kd_nn_indices}
-\alias{kd_nn_indices.matrix}
 \alias{kd_nn_indices.arrayvec}
+\alias{kd_nn_indices.matrix}
 \alias{kd_nn_indices.data.frame}
 \alias{kd_nearest_neighbor}
 \alias{kd_nearest_neighbor.matrix}
@@ -24,11 +24,11 @@ kd_nearest_neighbors(x, v, n, ...)
 
 kd_nn_indices(x, v, n, ...)
 
-\method{kd_nn_indices}{matrix}(x, v, n, ...)
+\method{kd_nn_indices}{arrayvec}(x, v, n, distances = FALSE, ...)
 
-\method{kd_nn_indices}{arrayvec}(x, v, n, ...)
+\method{kd_nn_indices}{matrix}(x, v, n, cols = NULL, distances = FALSE, ...)
 
-\method{kd_nn_indices}{data.frame}(x, v, n, cols = NULL, w = NULL, ...)
+\method{kd_nn_indices}{data.frame}(x, v, n, cols = NULL, w = NULL, distances = FALSE, ...)
 
 kd_nearest_neighbor(x, v)
 
@@ -48,6 +48,8 @@ kd_nearest_neighbor(x, v)
 \item{cols}{integer indices of columns to use}
 
 \item{w}{distance weights}
+
+\item{distances}{return distances as attribute if true}
 }
 \value{
 \tabular{ll}{
