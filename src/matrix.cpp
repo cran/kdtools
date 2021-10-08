@@ -24,8 +24,6 @@ using std::thread;
 
 #include <cmath>
 
-// #define USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
-
 #ifndef NO_CXX17
 
 #include "kdtools.h"
@@ -49,8 +47,6 @@ namespace {
 Function Requal("=="), Rless("<"), Rdiff("-");
 
 }
-
-#ifdef USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
 
 struct kd_less_mat
 {
@@ -78,33 +74,6 @@ struct kd_less_mat
   const IntegerVector& m_idx;
   int m_dim, m_ndim, m_count;
 };
-
-#else // (don't) USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
-
-struct kd_less_mat
-{
-  kd_less_mat(const NumericMatrix& mat, const IntegerVector& idx, int dim = 0)
-    : m_mat(mat), m_idx(idx), m_dim(dim), m_ndim(m_idx.size()) {}
-
-  kd_less_mat next_dim() const {
-    return kd_less_mat(m_mat, m_idx, (m_dim + 1) % m_ndim);
-  }
-
-  kd_less_mat operator++() const {
-    return next_dim();
-  }
-
-  bool operator()(const int lhs, const int rhs) const {
-    auto k = m_idx(m_dim) - 1;
-    return m_mat(lhs, k) < m_mat(rhs, k);
-  }
-
-  const NumericMatrix& m_mat;
-  const IntegerVector& m_idx;
-  int m_dim, m_ndim;
-};
-
-#endif // USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
 
 struct chck_nth_mat
 {
@@ -363,6 +332,44 @@ void knn_(Iter first, Iter last,
   }
 }
 
+template <typename Iter,
+          typename EqualNth,
+          typename ChckNth,
+          typename DistNth,
+          typename L2Dist,
+          typename QType>
+void aknn_(Iter first, Iter last,
+           const EqualNth& equal_nth,
+           const ChckNth& chck_nth,
+           const DistNth& dist_nth,
+           const L2Dist& l2dist,
+           double alpha,
+           QType& Q)
+{
+  switch(distance(first, last)) {
+  case 1 : Q.add(l2dist(*first), first);
+  case 0 : return; } // switch end
+  auto pivot = middle_of(first, last);
+  Q.add(l2dist(*pivot), pivot);
+  if (equal_nth(*pivot)) {
+    aknn_(first, pivot, ++equal_nth, ++chck_nth, ++dist_nth, l2dist, alpha, Q);
+    aknn_(next(pivot), last, ++equal_nth, ++chck_nth, ++dist_nth, l2dist, alpha, Q);
+  } else {
+    auto search_left = !chck_nth.search_right(*pivot);
+    if (search_left)
+      aknn_(first, pivot, ++equal_nth, ++chck_nth, ++dist_nth, l2dist, alpha, Q);
+    else
+      aknn_(next(pivot), last, ++equal_nth, ++chck_nth, ++dist_nth, l2dist, alpha, Q);
+    if ((1 + alpha) * dist_nth(*pivot) <= Q.max_key())
+    {
+      if (search_left)
+        aknn_(next(pivot), last, ++equal_nth, ++chck_nth, ++dist_nth, l2dist, alpha, Q);
+      else
+        aknn_(first, pivot, ++equal_nth, ++chck_nth, ++dist_nth, l2dist, alpha, Q);
+    }
+  }
+}
+
 #endif // NO_CXX17
 
 // [[Rcpp::export]]
@@ -475,6 +482,7 @@ std::vector<int> kd_rq_mat(const NumericMatrix& mat,
 std::vector<int> kd_nn_mat_no_validation(const NumericMatrix& mat,
                                          const IntegerVector& idx,
                                          const NumericVector& key,
+                                         const double alpha,
                                          const int n)
 {
 #ifdef NO_CXX17
@@ -486,8 +494,11 @@ std::vector<int> kd_nn_mat_no_validation(const NumericMatrix& mat,
   auto chck_nth = chck_nth_mat(mat, idx, key, key);
   auto l2dist = l2dist_mat(mat, idx, key);
   auto dist_nth = dist_nth_mat(mat, idx, key);
-  n_best<decltype(begin(x))> Q(n);
-  knn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, Q);
+  n_best<decltype(begin(x))> Q(std::min(n, mat.nrow()));
+  if (alpha > 0)
+    aknn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, alpha, Q);
+  else
+    knn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, Q);
   std::vector<int> res;
   auto oi = std::back_inserter(res);
   Q.copy_to(oi);
@@ -500,6 +511,7 @@ std::vector<int> kd_nn_mat_no_validation(const NumericMatrix& mat,
 std::vector<int> kd_nn_mat(const NumericMatrix& mat,
                            const IntegerVector& idx,
                            const NumericVector& key,
+                           const double alpha,
                            const int n)
 {
 #ifdef NO_CXX17
@@ -511,50 +523,58 @@ std::vector<int> kd_nn_mat(const NumericMatrix& mat,
     stop("Index out of range");
   if (idx.size() != key.size())
     stop("Incorrect dimension of key");
-  return kd_nn_mat_no_validation(mat, idx, key, n);
+  return kd_nn_mat_no_validation(mat, idx, key, alpha, n);
 #endif
 }
 
 // [[Rcpp::export]]
-IntegerVector kd_nn_dist_mat_no_validation(const NumericMatrix& mat,
-                                           const IntegerVector& idx,
-                                           const NumericVector& key,
-                                           const int n)
+List kd_nn_dist_mat_no_validation(const NumericMatrix& mat,
+                                  const IntegerVector& idx,
+                                  const NumericVector& key,
+                                  const double alpha,
+                                  const int n)
 {
 #ifdef NO_CXX17
-  return std::vector<int>();
+  return R_NilValue;
 #else
+  auto m = std::min(n, mat.nrow());
   std::vector<int> x(mat.nrow());
   iota(begin(x), end(x), 0);
   auto equal_nth = equal_nth_mat(mat, idx, key);
   auto chck_nth = chck_nth_mat(mat, idx, key, key);
   auto l2dist = l2dist_mat(mat, idx, key);
   auto dist_nth = dist_nth_mat(mat, idx, key);
-  n_best<decltype(begin(x))> Q(n);
-  knn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, Q);
+  n_best<decltype(begin(x))> Q(m);
+  if (alpha > 0)
+    aknn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, alpha, Q);
+  else
+    knn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, Q);
   std::vector<std::pair<double, decltype(begin(x))>> out;
   auto oi = std::back_inserter(out);
   out.reserve(n);
   Q.copy_dist_to(oi);
-  IntegerVector res(n);
-  NumericVector dist(n);
-  for (int i = 0; i != n; ++i) {
-    res[n - i - 1] = distance(begin(x), out[i].second) + 1;
-    dist[n - i - 1] = out[i].first;
+  IntegerVector loc(m);
+  NumericVector dist(m);
+  for (int i = 0; i != m; ++i) {
+    loc[i] = distance(begin(x), out[i].second) + 1;
+    dist[i] = out[i].first;
   }
-  res.attr("distance") = dist;
+  List res;
+  res["index"] = loc;
+  res["distance"] = dist;
   return res;
 #endif
 }
 
 // [[Rcpp::export]]
-IntegerVector kd_nn_dist_mat(const NumericMatrix& mat,
-                             const IntegerVector& idx,
-                             const NumericVector& key,
-                             const int n)
+List kd_nn_dist_mat(const NumericMatrix& mat,
+                    const IntegerVector& idx,
+                    const NumericVector& key,
+                    const double alpha,
+                    const int n)
 {
 #ifdef NO_CXX17
-  return std::vector<int>();
+  return R_NilValue;
 #else
   if (mat.ncol() < 1 || mat.nrow() < 1)
     stop("Empty matrix");
@@ -562,7 +582,7 @@ IntegerVector kd_nn_dist_mat(const NumericMatrix& mat,
     stop("Index out of range");
   if (idx.size() != key.size())
     stop("Incorrect dimension of key");
-  return kd_nn_dist_mat_no_validation(mat, idx, key, n);
+  return kd_nn_dist_mat_no_validation(mat, idx, key, alpha, n);
 #endif
 }
 

@@ -168,7 +168,7 @@ IntegerVector kd_nn_indices__(List x, NumericVector value, int n)
 }
 
 template <size_t I>
-IntegerVector kd_nn_dist__(List x, NumericVector value, int n)
+List kd_nn_dist__(List x, NumericVector value, int n)
 {
   auto p = get_ptr<I>(x);
   auto q = vector<std::pair<double, av_iter<I>>>();
@@ -176,13 +176,15 @@ IntegerVector kd_nn_dist__(List x, NumericVector value, int n)
   auto v = vec_to_array<I>(value);
   q.reserve(n);
   kd_nn_dist(begin(*p), end(*p), v, n, oi);
-  IntegerVector res(n);
+  IntegerVector loc(n);
   NumericVector dist(n);
   for (int i = 0; i != n; ++i) {
-    res[n - i - 1] = distance(p->begin(), q[i].second) + 1;
-    dist[n - i - 1] = q[i].first;
+    loc[i] = distance(p->begin(), q[i].second) + 1;
+    dist[i] = q[i].first;
   }
-  res.attr("distance") = dist;
+  List res;
+  res["index"] = loc;
+  res["distance"] = dist;
   return res;
 }
 
@@ -217,19 +219,6 @@ IntegerVector kd_order__(List x, bool inplace, bool parallel)
 
 #endif // NO_CXX17
 
-//' Check if package was compiled with circular comparisons
-//'
-//' @rdname utils
-//' @export
-// [[Rcpp::export]]
-bool using_circular_lexicographical_compare() {
-#ifdef USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
-  return true;
-#else
-  return false;
-#endif
-}
-
 //' Check if C++ 17 was available when building package
 //'
 //' @rdname utils
@@ -247,7 +236,7 @@ bool has_cxx17() {
 IntegerVector kd_order_(List x, bool inplace, bool parallel)
 {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_order__<1>(x, inplace, parallel);
@@ -289,7 +278,7 @@ bool kd_is_sorted_(List x, bool parallel)
 List kd_sort_(List x, bool inplace, bool parallel)
 {
 #ifdef NO_CXX17
-  return List();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_sort__<1>(x, inplace, parallel);
@@ -310,7 +299,7 @@ List kd_sort_(List x, bool inplace, bool parallel)
 List lex_sort_(List x, bool inplace)
 {
 #ifdef NO_CXX17
-  return List();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return lex_sort__<1>(x, inplace);
@@ -373,7 +362,7 @@ int kd_upper_bound_(List x, NumericVector value)
 List kd_range_query_(List x, NumericVector lower, NumericVector upper)
 {
 #ifdef NO_CXX17
-  return List();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_range_query__<1>(x, lower, upper);
@@ -394,7 +383,7 @@ List kd_range_query_(List x, NumericVector lower, NumericVector upper)
 IntegerVector kd_rq_indices_(List x, NumericVector lower, NumericVector upper)
 {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_rq_indices__<1>(x, lower, upper);
@@ -415,7 +404,7 @@ IntegerVector kd_rq_indices_(List x, NumericVector lower, NumericVector upper)
 List kd_rq_circular_(List x, NumericVector center, double radius)
 {
 #ifdef NO_CXX17
-  return List();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_rq_circular__<1>(x, center, radius);
@@ -436,7 +425,7 @@ List kd_rq_circular_(List x, NumericVector center, double radius)
 IntegerVector kd_rqi_circular_(List x, NumericVector center, double radius)
 {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_rqi_circular__<1>(x, center, radius);
@@ -478,7 +467,7 @@ int kd_nearest_neighbor_(List x, NumericVector value)
 bool kd_binary_search_(List x, NumericVector value)
 {
 #ifdef NO_CXX17
-  return NA_LOGICAL;
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_binary_search__<1>(x, value);
@@ -499,7 +488,7 @@ bool kd_binary_search_(List x, NumericVector value)
 List kd_nearest_neighbors_(List x, NumericVector value, int n)
 {
 #ifdef NO_CXX17
-  return List();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_nearest_neighbors__<1>(x, value, n);
@@ -520,7 +509,7 @@ List kd_nearest_neighbors_(List x, NumericVector value, int n)
 IntegerVector kd_nn_indices_(List x, NumericVector value, int n)
 {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_nn_indices__<1>(x, value, n);
@@ -538,10 +527,10 @@ IntegerVector kd_nn_indices_(List x, NumericVector value, int n)
 }
 
 // [[Rcpp::export]]
-IntegerVector kd_nn_dist_(List x, NumericVector value, int n)
+List kd_nn_dist_(List x, NumericVector value, int n)
 {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   switch(arrayvec_dim(x)) {
   case 1: return kd_nn_dist__<1>(x, value, n);

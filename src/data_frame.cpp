@@ -23,8 +23,6 @@ using std::thread;
 
 #include <cmath>
 
-// #define USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
-
 #ifndef NO_CXX17
 
 #include "kdtools.h"
@@ -62,8 +60,6 @@ std::string_view get_string(SEXP x, int i = 0) {
 Function Requal("=="), Rless("<"), Rdiff("-");
 
 } // namespace
-
-#ifdef USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
 
 struct kd_less_df
 {
@@ -129,57 +125,6 @@ struct kd_less_df
   const IntegerVector& m_idx;
   int m_dim, m_ndim, m_count;
 };
-
-#else // (don't) USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
-
-struct kd_less_df
-{
-  kd_less_df(const List& df, const IntegerVector& idx, int dim = 0)
-    : m_df(df), m_idx(idx), m_dim(dim), m_ndim(m_idx.size()) {}
-
-  kd_less_df next_dim() const {
-    return kd_less_df(m_df, m_idx, (m_dim + 1) % m_ndim);
-  }
-
-  kd_less_df operator++() const {
-    return kd_less_df(m_df, m_idx, (m_dim + 1) % m_ndim);
-  }
-
-  bool operator()(const int lhs, const int rhs) const {
-    auto col = SEXP(m_df[m_idx[m_dim] - 1]);
-    switch(TYPEOF(col)) {
-    case LGLSXP: {
-      return LOGICAL(col)[lhs] < LOGICAL(col)[rhs];
-      break;
-    }
-    case REALSXP: {
-      return REAL(col)[lhs] < REAL(col)[rhs];
-      break;
-    }
-    case INTSXP: {
-      return INTEGER(col)[lhs] < INTEGER(col)[rhs];
-      break;
-    }
-    case STRSXP: {
-      return get_string(col, lhs) < get_string(col, rhs);
-      break;
-    }
-    case VECSXP: {
-      SEXP lhs_ = VECTOR_ELT(col, lhs),
-        rhs_ = VECTOR_ELT(col, rhs);
-      return Rless(lhs_, rhs_);
-      break;
-    }
-    default: stop("Invalid column type");
-    }
-    return false;
-  }
-  const List& m_df;
-  const IntegerVector& m_idx;
-  int m_dim, m_ndim;
-};
-
-#endif // USE_CIRCULAR_LEXICOGRAPHIC_COMPARE
 
 struct chck_nth_df
 {
@@ -629,7 +574,7 @@ IntegerVector kd_order_df_no_validation(const List& df,
                                         const IntegerVector& idx,
                                         bool parallel = true) {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   IntegerVector x(nrow(df));
   iota(begin(x), end(x), 0);
@@ -647,7 +592,7 @@ IntegerVector kd_order_df(const List& df,
                           const IntegerVector& idx,
                           bool parallel = true) {
 #ifdef NO_CXX17
-  return IntegerVector();
+  return R_NilValue;
 #else
   if (ncol(df) < 1 || nrow(df) < 1)
     return IntegerVector();
@@ -662,7 +607,7 @@ bool kd_is_sorted_df_no_validation(const List& df,
                                    const IntegerVector& idx,
                                    bool parallel = true) {
 #ifdef NO_CXX17
-  return NA_LOGICAL;
+  return R_NilValue;
 #else
   IntegerVector x(nrow(df));
   iota(begin(x), end(x), 0);
@@ -679,7 +624,7 @@ bool kd_is_sorted_df(const List& df,
                      const IntegerVector& idx,
                      bool parallel = true) {
 #ifdef NO_CXX17
-  return NA_LOGICAL;
+  return R_NilValue;
 #else
   if (ncol(df) < 1 || nrow(df) < 1)
     stop("Invalid data frame");
@@ -748,7 +693,7 @@ std::vector<int> kd_nn_df_no_validation(const List& df,
   auto chck_nth = chck_nth_df(df, idx, key, key);
   auto l2dist = l2dist_df(df, idx, w, key);
   auto dist_nth = dist_nth_df(df, idx, w, key);
-  n_best<decltype(begin(x))> Q(n);
+  n_best<decltype(begin(x))> Q(std::min(n, nrow(df)));
   knn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, Q);
   std::vector<int> res;
   auto oi = std::back_inserter(res);
@@ -783,47 +728,50 @@ std::vector<int> kd_nn_df(const List& df,
 }
 
 // [[Rcpp::export]]
-IntegerVector kd_nn_dist_df_no_validation(const List& df,
-                                          const IntegerVector& idx,
-                                          const NumericVector& w,
-                                          const List& key,
-                                          const int n)
+List kd_nn_dist_df_no_validation(const List& df,
+                                 const IntegerVector& idx,
+                                 const NumericVector& w,
+                                 const List& key,
+                                 const int n)
 {
 #ifdef NO_CXX17
-  return std::vector<int>();
+  return R_NilValue;
 #else
+  auto m = std::min(n, nrow(df));
   std::vector<int> x(nrow(df));
   iota(begin(x), end(x), 0);
   auto equal_nth = equal_nth_df(df, idx, key);
   auto chck_nth = chck_nth_df(df, idx, key, key);
   auto l2dist = l2dist_df(df, idx, w, key);
   auto dist_nth = dist_nth_df(df, idx, w, key);
-  n_best<decltype(begin(x))> Q(n);
+  n_best<decltype(begin(x))> Q(m);
   knn_(begin(x), end(x), equal_nth, chck_nth, dist_nth, l2dist, Q);
   std::vector<std::pair<double, decltype(begin(x))>> out;
   auto oi = std::back_inserter(out);
   out.reserve(n);
   Q.copy_dist_to(oi);
-  IntegerVector res(n);
-  NumericVector dist(n);
-  for (int i = 0; i != n; ++i) {
-    res[n - i - 1] = distance(begin(x), out[i].second) + 1;
-    dist[n - i - 1] = out[i].first;
+  IntegerVector loc(m);
+  NumericVector dist(m);
+  for (int i = 0; i != m; ++i) {
+    loc[i] = distance(begin(x), out[i].second) + 1;
+    dist[i] = out[i].first;
   }
-  res.attr("distance") = dist;
+  List res;
+  res["index"] = loc;
+  res["distance"] = dist;
   return res;
 #endif
 }
 
 // [[Rcpp::export]]
-IntegerVector kd_nn_dist_df(const List& df,
-                            const IntegerVector& idx,
-                            const NumericVector& w,
-                            const List& key,
-                            const int n)
+List kd_nn_dist_df(const List& df,
+                   const IntegerVector& idx,
+                   const NumericVector& w,
+                   const List& key,
+                   const int n)
 {
 #ifdef NO_CXX17
-  return std::vector<int>();
+  return R_NilValue;
 #else
   if (ncol(df) < 1 || nrow(df) < 1)
     stop("Empty data frame");

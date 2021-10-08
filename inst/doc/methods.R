@@ -288,7 +288,7 @@ namespace keittlab {
 namespace kdtools {
 
 template <>
-double scalar_diff(const std::string& lhs, const std::string& rhs)
+double scalar_dist(const std::string& lhs, const std::string& rhs)
 {
   std::string a(lhs), b(rhs);
   std::sort(begin(a), end(a));

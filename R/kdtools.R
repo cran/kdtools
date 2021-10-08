@@ -4,6 +4,7 @@ NULL
 
 colspec <- function(x, cols = NULL) {
   res <- switch(mode(cols),
+         "call" = colspec(x, attr(stats::terms(cols), "term.labels")),
          "character" = match(cols, colnames(x)),
          "numeric" = cols,
          "logical" = (1:ncol(x))[cols],
@@ -19,7 +20,7 @@ colspec <- function(x, cols = NULL) {
 #' @param x a matrix or arrayvec object
 #' @param parallel use multiple threads if true
 #' @param inplace sort as a side-effect if true
-#' @param cols column indices or names
+#' @param cols integer or character vector or formula indicating columns
 #' @param ... ignored
 #' @details The algorithm used is a divide-and-conquer quicksort variant that
 #'   recursively partitions an range of tuples using the median of each
@@ -158,7 +159,7 @@ lex_sort.arrayvec <- function(x, inplace = FALSE, ...) {
 #' @param v a vector specifying where to look
 #' @param l lower left corner of search region
 #' @param u upper right corner of search region
-#' @param cols integer vector of column indices
+#' @param cols integer or character vector or formula indicating columns
 #' @param ... ignored
 #' @return \tabular{ll}{\code{kd_lower_bound} \tab a row of values (vector) \cr
 #'   \code{kd_upper_bound} \tab a row of values (vector) \cr
@@ -272,9 +273,10 @@ kd_binary_search.arrayvec <- function(x, v) {
 #' @param x an object sorted by \code{\link{kd_sort}}
 #' @param v a vector specifying where to look
 #' @param n the number of neighbors to return
-#' @param cols integer indices of columns to use
+#' @param cols integer or character vector or formula indicating columns
 #' @param w distance weights
-#' @param ... additional arguments
+#' @param alpha approximate neighbors within (1 + alpha)
+#' @param ... ignored
 #' @return \tabular{ll}{
 #' \code{kd_nearest_neighbors} \tab one or more rows from the sorted input \cr
 #' \code{kd_nn_indices} \tab a vector of row indices indicating the result \cr
@@ -296,8 +298,8 @@ kd_nearest_neighbors <- function(x, v, n, ...) UseMethod("kd_nearest_neighbors")
 
 #' @rdname nneighb
 #' @export
-kd_nearest_neighbors.matrix <- function(x, v, n, cols = NULL, ...) {
-  return(x[kd_nn_indices(x, v, n, colspec(x, cols)),, drop = FALSE])
+kd_nearest_neighbors.matrix <- function(x, v, n, cols = NULL, alpha = 0, ...) {
+  return(x[kd_nn_indices(x, v, n, colspec(x, cols), alpha = alpha),, drop = FALSE])
 }
 
 #' @rdname nneighb
@@ -320,15 +322,17 @@ kd_nn_indices <- function(x, v, n, ...) UseMethod("kd_nn_indices")
 #' @rdname nneighb
 #' @export
 kd_nn_indices.arrayvec <- function(x, v, n, distances = FALSE, ...) {
-  if (distances) return(kd_nn_dist_(x, v, n))
+  if (distances)
+    return(as.data.frame(kd_nn_dist_(x, v, n)))
   return(kd_nn_indices_(x, v, n))
 }
 
 #' @rdname nneighb
 #' @export
-kd_nn_indices.matrix <- function(x, v, n, cols = NULL, distances = FALSE, ...) {
-  if (distances) return(kd_nn_dist_mat(x, colspec(x, cols), v, n))
-  return(kd_nn_mat(x, colspec(x, cols), v, n))
+kd_nn_indices.matrix <- function(x, v, n, cols = NULL, distances = FALSE, alpha = 0, ...) {
+  if (distances)
+    return(as.data.frame(kd_nn_dist_mat(x, colspec(x, cols), v, alpha, n)))
+  return(kd_nn_mat(x, colspec(x, cols), v, alpha, n))
 }
 
 #' @rdname nneighb
@@ -336,7 +340,8 @@ kd_nn_indices.matrix <- function(x, v, n, cols = NULL, distances = FALSE, ...) {
 kd_nn_indices.data.frame <- function(x, v, n, cols = NULL, w = NULL, distances = FALSE, ...) {
   cols <- colspec(x, cols)
   if (is.null(w)) w <- rep_len(1, length(cols))
-  if (distances) return(kd_nn_dist_df(x, cols, w, v, n))
+  if (distances)
+    return(as.data.frame(kd_nn_dist_df(x, cols, w, v, n)))
   return(kd_nn_df(x, cols, w, v, n))
 }
 

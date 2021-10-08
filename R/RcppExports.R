@@ -75,14 +75,6 @@ kd_nn_dist_df <- function(df, idx, w, key, n) {
     .Call(`_kdtools_kd_nn_dist_df`, df, idx, w, key, n)
 }
 
-#' Check if package was compiled with circular comparisons
-#'
-#' @rdname utils
-#' @export
-using_circular_lexicographical_compare <- function() {
-    .Call(`_kdtools_using_circular_lexicographical_compare`)
-}
-
 #' Check if C++ 17 was available when building package
 #'
 #' @rdname utils
@@ -175,20 +167,20 @@ kd_rq_mat <- function(mat, idx, lower, upper) {
     .Call(`_kdtools_kd_rq_mat`, mat, idx, lower, upper)
 }
 
-kd_nn_mat_no_validation <- function(mat, idx, key, n) {
-    .Call(`_kdtools_kd_nn_mat_no_validation`, mat, idx, key, n)
+kd_nn_mat_no_validation <- function(mat, idx, key, alpha, n) {
+    .Call(`_kdtools_kd_nn_mat_no_validation`, mat, idx, key, alpha, n)
 }
 
-kd_nn_mat <- function(mat, idx, key, n) {
-    .Call(`_kdtools_kd_nn_mat`, mat, idx, key, n)
+kd_nn_mat <- function(mat, idx, key, alpha, n) {
+    .Call(`_kdtools_kd_nn_mat`, mat, idx, key, alpha, n)
 }
 
-kd_nn_dist_mat_no_validation <- function(mat, idx, key, n) {
-    .Call(`_kdtools_kd_nn_dist_mat_no_validation`, mat, idx, key, n)
+kd_nn_dist_mat_no_validation <- function(mat, idx, key, alpha, n) {
+    .Call(`_kdtools_kd_nn_dist_mat_no_validation`, mat, idx, key, alpha, n)
 }
 
-kd_nn_dist_mat <- function(mat, idx, key, n) {
-    .Call(`_kdtools_kd_nn_dist_mat`, mat, idx, key, n)
+kd_nn_dist_mat <- function(mat, idx, key, alpha, n) {
+    .Call(`_kdtools_kd_nn_dist_mat`, mat, idx, key, alpha, n)
 }
 
 levenshtein <- function(s1, s2) {

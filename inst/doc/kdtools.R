@@ -15,15 +15,15 @@ knitr::opts_chunk$set(
 
 ## -----------------------------------------------------------------------------
 # sort by weight, miles-per-gallon and displacement
-mtcars_sorted <- kd_sort(mtcars, cols = c(6, 1, 3));
+mtcars_sorted <- kd_sort(mtcars, cols = ~ wt + mpg + disp);
 head(mtcars_sorted, 3)
 tail(mtcars_sorted, 3)
 
 ## -----------------------------------------------------------------------------
 lower <- c(2.5, 17, 120)
 upper <- c(3.6, 22, 330)
-kd_range_query(mtcars_sorted, lower, upper, cols = c(6, 1, 3))
-kd_nearest_neighbors(mtcars_sorted, lower, 2, cols = c(6, 1, 3))
+kd_range_query(mtcars_sorted, lower, upper, cols = ~ wt + mpg + disp)
+kd_nearest_neighbors(mtcars_sorted, lower, 2, cols = ~ wt + mpg + disp)
 
 ## -----------------------------------------------------------------------------
 library(kdtools)
